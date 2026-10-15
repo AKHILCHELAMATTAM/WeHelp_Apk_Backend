@@ -25,11 +25,25 @@ class Attendance(models.Model):
     date = models.DateField(default=timezone.localdate)
     check_in_time = models.DateTimeField(null=True, blank=True)
     check_out_time = models.DateTimeField(null=True, blank=True)
-    check_in_latitude = models.FloatField(null=True, blank=True)
-    check_in_longitude = models.FloatField(null=True, blank=True)
+    check_in_latitude = models.FloatField(
+        null=True, blank=True, help_text="Exact GPS latitude at check-in"
+    )
+    check_in_longitude = models.FloatField(
+        null=True, blank=True, help_text="Exact GPS longitude at check-in"
+    )
+    check_in_accuracy = models.FloatField(
+        null=True, blank=True, help_text="GPS accuracy in meters at check-in"
+    )
     check_in_address = models.CharField(max_length=255, blank=True, null=True)
-    check_out_latitude = models.FloatField(null=True, blank=True)
-    check_out_longitude = models.FloatField(null=True, blank=True)
+    check_out_latitude = models.FloatField(
+        null=True, blank=True, help_text="Exact GPS latitude at check-out"
+    )
+    check_out_longitude = models.FloatField(
+        null=True, blank=True, help_text="Exact GPS longitude at check-out"
+    )
+    check_out_accuracy = models.FloatField(
+        null=True, blank=True, help_text="GPS accuracy in meters at check-out"
+    )
     check_out_address = models.CharField(max_length=255, blank=True, null=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="PRESENT")
     notes = models.TextField(blank=True, null=True)
@@ -44,6 +58,32 @@ class Attendance(models.Model):
 
     def __str__(self):
         return f"{self.agent.username} - {self.date} ({self.status})"
+
+    @property
+    def check_in_google_map_link(self):
+        """
+        Returns direct Google Maps pin URL for check-in coordinates.
+        """
+        if self.check_in_latitude is not None and self.check_in_longitude is not None:
+            return f"https://www.google.com/maps?q={self.check_in_latitude},{self.check_in_longitude}"
+        return None
+
+    @property
+    def check_out_google_map_link(self):
+        """
+        Returns direct Google Maps pin URL for check-out coordinates.
+        """
+        if self.check_out_latitude is not None and self.check_out_longitude is not None:
+            return f"https://www.google.com/maps?q={self.check_out_latitude},{self.check_out_longitude}"
+        return None
+
+    @property
+    def check_in_map_url(self):
+        return self.check_in_google_map_link
+
+    @property
+    def check_out_map_url(self):
+        return self.check_out_google_map_link
 
 
 class DailyTarget(models.Model):

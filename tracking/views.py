@@ -114,6 +114,7 @@ class AdminLiveTrackingView(APIView):
                     "accuracy": latest_loc.accuracy if latest_loc else None,
                     "battery_level": latest_loc.battery_level if latest_loc else None,
                     "address": latest_loc.address if latest_loc else None,
+                    "google_map_link": latest_loc.google_map_link if latest_loc else None,
                     "last_updated": latest_loc.recorded_at if latest_loc else None,
                     "is_online": is_online,
                 }

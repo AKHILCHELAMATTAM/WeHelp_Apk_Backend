@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "2ec4bd65-ef53-4f22-98cc-66c1246af7f0",
+    "_postman_id": "0d530c7f-f22a-40c2-9ef8-e9ff21189348",
     "name": "WeHelp APK Backend API (AWS EC2)",
     "description": "# WeHelp APK Backend API (AWS EC2)\n\n**Target URL:** `http://3.111.29.126`\n\nThis Postman Collection covers the end-to-end workflow for both **Field Agents** and **Administrators** as defined in the workflow diagram:\n- **Authentication**: Role-based login (Admin/Agent) with JWT token auto-capture.\n- **Admin Workflow**: Agent Creation, Real-time GPS Location Tracking, Leave & Week-Off Management, Payment Records Management, and Daily Targets.\n- **Agent Workflow**: GPS Location Streaming, Cash & Product/Grocery Donation Logging, Attendance Check-In/Out, Daily Targets & Progress Tracking, and Leave Requests.\n\n### ⚡ Quick Start:\n1. Send the **Admin Login** request under `1. Authentication & Profile` to automatically set `{{admin_token}}`.\n2. Send the **Agent Login** request under `1. Authentication & Profile` to automatically set `{{agent_token}}`.\n3. You can now execute any Admin or Agent request in this collection seamlessly!",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -2082,7 +2082,7 @@
                     ""
                   ]
                 },
-                "description": "Workflow: 'Attendance' - Agent checks in for field duty with GPS location and address.",
+                "description": "Workflow: 'Attendance' - Agent checks in for field duty with exact GPS coordinates (latitude, longitude, accuracy) and address. Admin receives direct Google Maps link.",
                 "auth": {
                   "type": "bearer",
                   "bearer": [
@@ -2095,7 +2095,7 @@
                 },
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"latitude\": 28.7041,\n  \"longitude\": 77.1025,\n  \"address\": \"Sector 14 Hub, Rohini, New Delhi\",\n  \"notes\": \"Starting morning field shift\"\n}",
+                  "raw": "{\n  \"latitude\": 28.7041,\n  \"longitude\": 77.1025,\n  \"accuracy\": 4.5,\n  \"address\": \"Sector 14 Hub, Rohini, New Delhi\",\n  \"notes\": \"Starting morning field shift\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -2103,7 +2103,24 @@
                   }
                 }
               },
-              "response": []
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 200 OK\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "pm.test(\"Google Map link is returned\", function () {",
+                      "    var jsonData = pm.response.json();",
+                      "    pm.expect(jsonData.attendance.check_in_google_map_link).to.include(\"https://www.google.com/maps?q=28.7041,77.1025\");",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
             },
             {
               "name": "Attendance Check-Out",
@@ -2134,7 +2151,7 @@
                     ""
                   ]
                 },
-                "description": "Workflow: 'Attendance' - Agent checks out at end of shift with GPS location.",
+                "description": "Workflow: 'Attendance' - Agent checks out at end of shift with exact GPS coordinates. Admin receives direct Google Maps link.",
                 "auth": {
                   "type": "bearer",
                   "bearer": [
@@ -2147,7 +2164,7 @@
                 },
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"latitude\": 28.7055,\n  \"longitude\": 77.104,\n  \"address\": \"Sector 14 Field Office, Delhi\",\n  \"notes\": \"Completed day schedule and submitted receipts\"\n}",
+                  "raw": "{\n  \"latitude\": 28.7055,\n  \"longitude\": 77.104,\n  \"accuracy\": 3.8,\n  \"address\": \"Sector 14 Field Office, Delhi\",\n  \"notes\": \"Completed day schedule and submitted receipts\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -2155,7 +2172,24 @@
                   }
                 }
               },
-              "response": []
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 200 OK\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "pm.test(\"Google Map link is returned\", function () {",
+                      "    var jsonData = pm.response.json();",
+                      "    pm.expect(jsonData.attendance.check_out_google_map_link).to.include(\"https://www.google.com/maps?q=28.7055,77.104\");",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
             },
             {
               "name": "Get Today's Attendance Status",

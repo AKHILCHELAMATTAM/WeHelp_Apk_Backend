@@ -48,6 +48,8 @@ class AgentLocationSerializer(serializers.ModelSerializer):
     agent_name = serializers.CharField(source="agent.get_full_name", read_only=True)
     agent_username = serializers.CharField(source="agent.username", read_only=True)
 
+    google_map_link = serializers.CharField(read_only=True)
+
     class Meta:
         model = AgentLocation
         fields = [
@@ -62,6 +64,7 @@ class AgentLocationSerializer(serializers.ModelSerializer):
             "altitude",
             "battery_level",
             "address",
+            "google_map_link",
             "recorded_at",
             "created_at",
         ]
@@ -84,5 +87,6 @@ class LiveAgentTrackingSerializer(serializers.Serializer):
     accuracy = serializers.FloatField(allow_null=True)
     battery_level = serializers.IntegerField(allow_null=True)
     address = serializers.CharField(allow_null=True)
+    google_map_link = serializers.CharField(allow_null=True)
     last_updated = serializers.DateTimeField(allow_null=True)
     is_online = serializers.BooleanField()

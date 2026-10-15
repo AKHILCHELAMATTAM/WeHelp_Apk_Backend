@@ -53,3 +53,12 @@ class AgentLocation(models.Model):
 
     def __str__(self):
         return f"{self.agent.username} @ ({self.latitude}, {self.longitude}) at {self.recorded_at}"
+
+    @property
+    def google_map_link(self):
+        """
+        Returns direct Google Maps pin URL for the location fix.
+        """
+        if self.latitude is not None and self.longitude is not None:
+            return f"https://www.google.com/maps?q={self.latitude},{self.longitude}"
+        return None

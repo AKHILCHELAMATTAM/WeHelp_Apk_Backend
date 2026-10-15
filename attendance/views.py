@@ -38,15 +38,22 @@ class AgentCheckInView(APIView):
         today = timezone.localdate()
         now = timezone.now()
 
+        lat = serializer.validated_data.get("latitude")
+        lng = serializer.validated_data.get("longitude")
+        accuracy = serializer.validated_data.get("accuracy")
+        address = serializer.validated_data.get("address")
+        notes = serializer.validated_data.get("notes")
+
         attendance, created = Attendance.objects.get_or_create(
             agent=request.user,
             date=today,
             defaults={
                 "check_in_time": now,
-                "check_in_latitude": serializer.validated_data.get("latitude"),
-                "check_in_longitude": serializer.validated_data.get("longitude"),
-                "check_in_address": serializer.validated_data.get("address"),
-                "notes": serializer.validated_data.get("notes"),
+                "check_in_latitude": lat,
+                "check_in_longitude": lng,
+                "check_in_accuracy": accuracy,
+                "check_in_address": address,
+                "notes": notes,
                 "status": "PRESENT",
             },
         )
@@ -54,11 +61,27 @@ class AgentCheckInView(APIView):
         if not created:
             if not attendance.check_in_time:
                 attendance.check_in_time = now
-                attendance.check_in_latitude = serializer.validated_data.get("latitude")
-                attendance.check_in_longitude = serializer.validated_data.get("longitude")
-                attendance.check_in_address = serializer.validated_data.get("address")
+                attendance.check_in_latitude = lat
+                attendance.check_in_longitude = lng
+                attendance.check_in_accuracy = accuracy
+                attendance.check_in_address = address
                 attendance.status = "PRESENT"
+                if notes:
+                    attendance.notes = f"{attendance.notes or ''}\n{notes}".strip()
                 attendance.save()
+
+        # Sync exact check-in location with live agent tracking
+        if lat is not None and lng is not None:
+            from tracking.models import AgentLocation
+
+            AgentLocation.objects.create(
+                agent=request.user,
+                latitude=lat,
+                longitude=lng,
+                accuracy=accuracy,
+                address=address or "Checked in for attendance",
+                recorded_at=now,
+            )
 
         return Response(
             {
@@ -98,15 +121,35 @@ class AgentCheckOutView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        lat = serializer.validated_data.get("latitude")
+        lng = serializer.validated_data.get("longitude")
+        accuracy = serializer.validated_data.get("accuracy")
+        address = serializer.validated_data.get("address")
+        notes = serializer.validated_data.get("notes")
+
         attendance.check_out_time = now
-        attendance.check_out_latitude = serializer.validated_data.get("latitude")
-        attendance.check_out_longitude = serializer.validated_data.get("longitude")
-        attendance.check_out_address = serializer.validated_data.get("address")
-        if serializer.validated_data.get("notes"):
+        attendance.check_out_latitude = lat
+        attendance.check_out_longitude = lng
+        attendance.check_out_accuracy = accuracy
+        attendance.check_out_address = address
+        if notes:
             attendance.notes = (
-                f"{attendance.notes or ''}\nCheck-out note: {serializer.validated_data.get('notes')}".strip()
+                f"{attendance.notes or ''}\nCheck-out note: {notes}".strip()
             )
         attendance.save()
+
+        # Sync exact check-out location with live agent tracking
+        if lat is not None and lng is not None:
+            from tracking.models import AgentLocation
+
+            AgentLocation.objects.create(
+                agent=request.user,
+                latitude=lat,
+                longitude=lng,
+                accuracy=accuracy,
+                address=address or "Checked out from attendance",
+                recorded_at=now,
+            )
 
         return Response(
             {

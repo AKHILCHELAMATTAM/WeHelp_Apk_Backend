@@ -668,10 +668,20 @@ pm.test("Donation type is PRODUCT", function () {
                         body_data={
                             "latitude": 28.7041,
                             "longitude": 77.1025,
+                            "accuracy": 4.5,
                             "address": "Sector 14 Hub, Rohini, New Delhi",
                             "notes": "Starting morning field shift"
                         },
-                        description="Workflow: 'Attendance' - Agent checks in for field duty with GPS location and address."
+                        test_script="""
+pm.test("Status code is 200 OK", function () {
+    pm.response.to.have.status(200);
+});
+pm.test("Google Map link is returned", function () {
+    var jsonData = pm.response.json();
+    pm.expect(jsonData.attendance.check_in_google_map_link).to.include("https://www.google.com/maps?q=28.7041,77.1025");
+});
+""",
+                        description="Workflow: 'Attendance' - Agent checks in for field duty with exact GPS coordinates (latitude, longitude, accuracy) and address. Admin receives direct Google Maps link."
                     ),
                     make_request(
                         name="Attendance Check-Out",
@@ -681,10 +691,20 @@ pm.test("Donation type is PRODUCT", function () {
                         body_data={
                             "latitude": 28.7055,
                             "longitude": 77.1040,
+                            "accuracy": 3.8,
                             "address": "Sector 14 Field Office, Delhi",
                             "notes": "Completed day schedule and submitted receipts"
                         },
-                        description="Workflow: 'Attendance' - Agent checks out at end of shift with GPS location."
+                        test_script="""
+pm.test("Status code is 200 OK", function () {
+    pm.response.to.have.status(200);
+});
+pm.test("Google Map link is returned", function () {
+    var jsonData = pm.response.json();
+    pm.expect(jsonData.attendance.check_out_google_map_link).to.include("https://www.google.com/maps?q=28.7055,77.104");
+});
+""",
+                        description="Workflow: 'Attendance' - Agent checks out at end of shift with exact GPS coordinates. Admin receives direct Google Maps link."
                     ),
                     make_request(
                         name="Get Today's Attendance Status",

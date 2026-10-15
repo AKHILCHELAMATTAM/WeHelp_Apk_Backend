@@ -34,27 +34,41 @@ class AttendanceWorkflowTests(APITestCase):
         check_in_payload = {
             "latitude": 28.5355,
             "longitude": 77.3910,
+            "accuracy": 4.5,
             "address": "Sector 62 Metro Station, Noida",
             "notes": "Starting morning shift",
         }
         res = self.client.post(self.check_in_url, check_in_payload)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertIn("check_in_google_map_link", res.data["attendance"])
+        self.assertIn("https://www.google.com/maps?q=28.5355,77.391", res.data["attendance"]["check_in_google_map_link"])
         today = timezone.localdate()
         att = Attendance.objects.get(agent=self.agent, date=today)
         self.assertIsNotNone(att.check_in_time)
+        self.assertEqual(att.check_in_latitude, 28.5355)
+        self.assertEqual(att.check_in_longitude, 77.3910)
+        self.assertEqual(att.check_in_accuracy, 4.5)
         self.assertEqual(att.check_in_address, "Sector 62 Metro Station, Noida")
+        self.assertIn("https://www.google.com/maps?q=28.5355,77.391", att.check_in_google_map_link)
 
         # 2. Check out
         check_out_payload = {
             "latitude": 28.5358,
             "longitude": 77.3915,
+            "accuracy": 3.8,
             "address": "Sector 62 Office, Noida",
             "notes": "Completed day targets",
         }
         res = self.client.post(self.check_out_url, check_out_payload)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertIn("check_out_google_map_link", res.data["attendance"])
+        self.assertIn("https://www.google.com/maps?q=28.5358,77.3915", res.data["attendance"]["check_out_google_map_link"])
         att.refresh_from_db()
         self.assertIsNotNone(att.check_out_time)
+        self.assertEqual(att.check_out_latitude, 28.5358)
+        self.assertEqual(att.check_out_longitude, 77.3915)
+        self.assertEqual(att.check_out_accuracy, 3.8)
+        self.assertIn("https://www.google.com/maps?q=28.5358,77.3915", att.check_out_google_map_link)
 
     def test_view_daily_target_and_achieved_progress(self):
         """Workflow: Attendance -> Display Today's Target -> View Daily Target"""

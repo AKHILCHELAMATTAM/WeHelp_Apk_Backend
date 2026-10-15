@@ -8,22 +8,74 @@ from .models import Attendance, DailyTarget
 
 
 class CheckInSerializer(serializers.Serializer):
-    latitude = serializers.FloatField(required=False, allow_null=True)
-    longitude = serializers.FloatField(required=False, allow_null=True)
-    address = serializers.CharField(required=False, allow_blank=True, max_length=255)
-    notes = serializers.CharField(required=False, allow_blank=True)
+    latitude = serializers.FloatField(
+        required=True,
+        min_value=-90.0,
+        max_value=90.0,
+        help_text="Exact GPS latitude of the agent at check-in (e.g. 28.5355)",
+    )
+    longitude = serializers.FloatField(
+        required=True,
+        min_value=-180.0,
+        max_value=180.0,
+        help_text="Exact GPS longitude of the agent at check-in (e.g. 77.3910)",
+    )
+    accuracy = serializers.FloatField(
+        required=False,
+        allow_null=True,
+        help_text="GPS accuracy radius in meters (e.g. 5.2)",
+    )
+    address = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        max_length=255,
+        help_text="Human-readable location or landmark",
+    )
+    notes = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        help_text="Optional morning notes or remarks",
+    )
 
 
 class CheckOutSerializer(serializers.Serializer):
-    latitude = serializers.FloatField(required=False, allow_null=True)
-    longitude = serializers.FloatField(required=False, allow_null=True)
-    address = serializers.CharField(required=False, allow_blank=True, max_length=255)
-    notes = serializers.CharField(required=False, allow_blank=True)
+    latitude = serializers.FloatField(
+        required=True,
+        min_value=-90.0,
+        max_value=90.0,
+        help_text="Exact GPS latitude of the agent at check-out (e.g. 28.5358)",
+    )
+    longitude = serializers.FloatField(
+        required=True,
+        min_value=-180.0,
+        max_value=180.0,
+        help_text="Exact GPS longitude of the agent at check-out (e.g. 77.3915)",
+    )
+    accuracy = serializers.FloatField(
+        required=False,
+        allow_null=True,
+        help_text="GPS accuracy radius in meters (e.g. 4.8)",
+    )
+    address = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        max_length=255,
+        help_text="Human-readable location or landmark",
+    )
+    notes = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        help_text="Optional end-of-day notes or summary",
+    )
 
 
 class AttendanceSerializer(serializers.ModelSerializer):
     agent_name = serializers.CharField(source="agent.get_full_name", read_only=True)
     agent_username = serializers.CharField(source="agent.username", read_only=True)
+    check_in_google_map_link = serializers.CharField(read_only=True)
+    check_in_map_url = serializers.CharField(read_only=True)
+    check_out_google_map_link = serializers.CharField(read_only=True)
+    check_out_map_url = serializers.CharField(read_only=True)
 
     class Meta:
         model = Attendance
@@ -37,16 +89,31 @@ class AttendanceSerializer(serializers.ModelSerializer):
             "check_out_time",
             "check_in_latitude",
             "check_in_longitude",
+            "check_in_accuracy",
             "check_in_address",
+            "check_in_google_map_link",
+            "check_in_map_url",
             "check_out_latitude",
             "check_out_longitude",
+            "check_out_accuracy",
             "check_out_address",
+            "check_out_google_map_link",
+            "check_out_map_url",
             "status",
             "notes",
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ["id", "date", "created_at", "updated_at"]
+        read_only_fields = [
+            "id",
+            "date",
+            "check_in_google_map_link",
+            "check_in_map_url",
+            "check_out_google_map_link",
+            "check_out_map_url",
+            "created_at",
+            "updated_at",
+        ]
 
 
 class DailyTargetSerializer(serializers.ModelSerializer):
