@@ -40,8 +40,13 @@ class AttendanceWorkflowTests(APITestCase):
         }
         res = self.client.post(self.check_in_url, check_in_payload)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
+        # Direct response fields
+        self.assertEqual(res.data["latitude"], 28.5355)
+        self.assertEqual(res.data["longitude"], 77.3910)
+        self.assertIn("https://www.google.com/maps?q=28.5355,77.391", res.data["google_map_link"])
+        # Serializer fields
         self.assertIn("check_in_google_map_link", res.data["attendance"])
-        self.assertIn("https://www.google.com/maps?q=28.5355,77.391", res.data["attendance"]["check_in_google_map_link"])
+        self.assertIn("https://www.google.com/maps?q=28.5355,77.391", res.data["attendance"]["google_map_link"])
         today = timezone.localdate()
         att = Attendance.objects.get(agent=self.agent, date=today)
         self.assertIsNotNone(att.check_in_time)
@@ -61,6 +66,9 @@ class AttendanceWorkflowTests(APITestCase):
         }
         res = self.client.post(self.check_out_url, check_out_payload)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data["latitude"], 28.5358)
+        self.assertEqual(res.data["longitude"], 77.3915)
+        self.assertIn("https://www.google.com/maps?q=28.5358,77.3915", res.data["google_map_link"])
         self.assertIn("check_out_google_map_link", res.data["attendance"])
         self.assertIn("https://www.google.com/maps?q=28.5358,77.3915", res.data["attendance"]["check_out_google_map_link"])
         att.refresh_from_db()

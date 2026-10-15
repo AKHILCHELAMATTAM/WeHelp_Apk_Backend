@@ -86,6 +86,13 @@ class AgentCheckInView(APIView):
         return Response(
             {
                 "message": "Checked in successfully.",
+                "status": attendance.status,
+                "latitude": lat,
+                "longitude": lng,
+                "accuracy": accuracy,
+                "address": address,
+                "google_map_link": attendance.check_in_google_map_link,
+                "check_in_time": attendance.check_in_time,
                 "attendance": AttendanceSerializer(attendance).data,
             },
             status=status.HTTP_200_OK,
@@ -154,6 +161,13 @@ class AgentCheckOutView(APIView):
         return Response(
             {
                 "message": "Checked out successfully.",
+                "status": attendance.status,
+                "latitude": lat,
+                "longitude": lng,
+                "accuracy": accuracy,
+                "address": address,
+                "google_map_link": attendance.check_out_google_map_link,
+                "check_out_time": attendance.check_out_time,
                 "attendance": AttendanceSerializer(attendance).data,
             },
             status=status.HTTP_200_OK,
@@ -182,6 +196,9 @@ class AgentTodayAttendanceStatusView(APIView):
                     "checked_in": False,
                     "checked_out": False,
                     "status": "NOT_CHECKED_IN",
+                    "latitude": None,
+                    "longitude": None,
+                    "google_map_link": None,
                     "attendance": None,
                 }
             )
@@ -192,6 +209,9 @@ class AgentTodayAttendanceStatusView(APIView):
                 "checked_in": bool(attendance.check_in_time),
                 "checked_out": bool(attendance.check_out_time),
                 "status": attendance.status,
+                "latitude": attendance.check_in_latitude,
+                "longitude": attendance.check_in_longitude,
+                "google_map_link": attendance.check_in_google_map_link,
                 "attendance": AttendanceSerializer(attendance).data,
             }
         )

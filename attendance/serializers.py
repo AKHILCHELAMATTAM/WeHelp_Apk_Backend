@@ -72,6 +72,9 @@ class CheckOutSerializer(serializers.Serializer):
 class AttendanceSerializer(serializers.ModelSerializer):
     agent_name = serializers.CharField(source="agent.get_full_name", read_only=True)
     agent_username = serializers.CharField(source="agent.username", read_only=True)
+    latitude = serializers.FloatField(source="check_in_latitude", read_only=True)
+    longitude = serializers.FloatField(source="check_in_longitude", read_only=True)
+    google_map_link = serializers.CharField(source="check_in_google_map_link", read_only=True)
     check_in_google_map_link = serializers.CharField(read_only=True)
     check_in_map_url = serializers.CharField(read_only=True)
     check_out_google_map_link = serializers.CharField(read_only=True)
@@ -85,6 +88,10 @@ class AttendanceSerializer(serializers.ModelSerializer):
             "agent_username",
             "agent_name",
             "date",
+            "status",
+            "latitude",
+            "longitude",
+            "google_map_link",
             "check_in_time",
             "check_out_time",
             "check_in_latitude",
@@ -99,7 +106,6 @@ class AttendanceSerializer(serializers.ModelSerializer):
             "check_out_address",
             "check_out_google_map_link",
             "check_out_map_url",
-            "status",
             "notes",
             "created_at",
             "updated_at",
@@ -107,6 +113,9 @@ class AttendanceSerializer(serializers.ModelSerializer):
         read_only_fields = [
             "id",
             "date",
+            "latitude",
+            "longitude",
+            "google_map_link",
             "check_in_google_map_link",
             "check_in_map_url",
             "check_out_google_map_link",

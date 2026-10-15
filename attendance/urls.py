@@ -13,6 +13,7 @@ from .views import (
 
 urlpatterns = [
     # Agent attendance & target endpoints
+    path("agent/attendance/", AgentCheckInView.as_view(), name="agent-attendance-add"),
     path("agent/attendance/check-in/", AgentCheckInView.as_view(), name="agent-check-in"),
     path("agent/attendance/check-out/", AgentCheckOutView.as_view(), name="agent-check-out"),
     path(

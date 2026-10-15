@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "0d530c7f-f22a-40c2-9ef8-e9ff21189348",
+    "_postman_id": "147d5eb6-5a2e-4b8b-9bfe-cef28c5d478f",
     "name": "WeHelp APK Backend API (AWS EC2)",
     "description": "# WeHelp APK Backend API (AWS EC2)\n\n**Target URL:** `http://3.111.29.126`\n\nThis Postman Collection covers the end-to-end workflow for both **Field Agents** and **Administrators** as defined in the workflow diagram:\n- **Authentication**: Role-based login (Admin/Agent) with JWT token auto-capture.\n- **Admin Workflow**: Agent Creation, Real-time GPS Location Tracking, Leave & Week-Off Management, Payment Records Management, and Daily Targets.\n- **Agent Workflow**: GPS Location Streaming, Cash & Product/Grocery Donation Logging, Attendance Check-In/Out, Daily Targets & Progress Tracking, and Leave Requests.\n\n### ⚡ Quick Start:\n1. Send the **Admin Login** request under `1. Authentication & Profile` to automatically set `{{admin_token}}`.\n2. Send the **Agent Login** request under `1. Authentication & Profile` to automatically set `{{agent_token}}`.\n3. You can now execute any Admin or Agent request in this collection seamlessly!",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
