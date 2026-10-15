@@ -1,8 +1,8 @@
 {
   "info": {
-    "_postman_id": "b1fff999-76a8-4309-bde6-0b2494477028",
-    "name": "Field Agent & Donation Management System API",
-    "description": "# Field Agent & Donation Management System REST APIs\n\nThis Postman Collection covers the end-to-end workflow for both **Field Agents** and **Administrators** as defined in the workflow diagram:\n- **Authentication**: Role-based login (Admin/Agent) with JWT token auto-capture.\n- **Admin Workflow**: Agent Creation, Real-time GPS Location Tracking, Leave & Week-Off Management, Payment Records Management, and Daily Targets.\n- **Agent Workflow**: GPS Location Streaming, Cash & Product/Grocery Donation Logging, Attendance Check-In/Out, Daily Targets & Progress Tracking, and Leave Requests.\n\n### ⚡ Quick Start:\n1. Send the **Admin Login** request under `1. Authentication & Profile` to automatically set `{{admin_token}}`.\n2. Send the **Agent Login** request under `1. Authentication & Profile` to automatically set `{{agent_token}}`.\n3. You can now execute any Admin or Agent request in this collection seamlessly!",
+    "_postman_id": "9a7a1824-cd08-4fa4-9c34-b70bdfc6dbf0",
+    "name": "Field Agent & Donation System API (Local)",
+    "description": "# Field Agent & Donation System API (Local)\n\n**Target URL:** `http://127.0.0.1:8000`\n\nThis Postman Collection covers the end-to-end workflow for both **Field Agents** and **Administrators** as defined in the workflow diagram:\n- **Authentication**: Role-based login (Admin/Agent) with JWT token auto-capture.\n- **Admin Workflow**: Agent Creation, Real-time GPS Location Tracking, Leave & Week-Off Management, Payment Records Management, and Daily Targets.\n- **Agent Workflow**: GPS Location Streaming, Cash & Product/Grocery Donation Logging, Attendance Check-In/Out, Daily Targets & Progress Tracking, and Leave Requests.\n\n### ⚡ Quick Start:\n1. Send the **Admin Login** request under `1. Authentication & Profile` to automatically set `{{admin_token}}`.\n2. Send the **Agent Login** request under `1. Authentication & Profile` to automatically set `{{agent_token}}`.\n3. You can now execute any Admin or Agent request in this collection seamlessly!",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -76,7 +76,8 @@
               "path": [
                 "api",
                 "auth",
-                "login"
+                "login",
+                ""
               ]
             },
             "description": "Workflow: 'Select User Role' -> 'Admin' -> 'Admin Login' -> 'Credentials Valid?' -> Yes: 'Admin Dashboard'",
@@ -141,7 +142,8 @@
               "path": [
                 "api",
                 "auth",
-                "login"
+                "login",
+                ""
               ]
             },
             "description": "Workflow: 'Select User Role' -> 'Agent' -> 'Agent Login' -> 'Credentials Valid?' -> Yes: 'Agent Dashboard'",
@@ -205,7 +207,8 @@
               "path": [
                 "api",
                 "auth",
-                "login"
+                "login",
+                ""
               ]
             },
             "description": "Workflow: 'Credentials Valid?' -> No -> 'Show Login Error'",
@@ -263,7 +266,8 @@
                 "api",
                 "auth",
                 "token",
-                "refresh"
+                "refresh",
+                ""
               ]
             },
             "description": "Refreshes an expired JWT access token using the refresh token.",
@@ -303,7 +307,8 @@
               "path": [
                 "api",
                 "auth",
-                "profile"
+                "profile",
+                ""
               ]
             },
             "description": "Retrieves the profile of the currently authenticated user.",
@@ -344,7 +349,8 @@
               "path": [
                 "api",
                 "auth",
-                "profile"
+                "profile",
+                ""
               ]
             },
             "description": "Allows the authenticated user to update their contact details.",
@@ -403,7 +409,8 @@
                   "path": [
                     "api",
                     "admin",
-                    "dashboard"
+                    "dashboard",
+                    ""
                   ]
                 },
                 "description": "Workflow: 'Admin Dashboard' - Returns aggregated metrics for total agents, online agents, collections, pending leaves, and recent activity.",
@@ -449,7 +456,8 @@
                   "path": [
                     "api",
                     "admin",
-                    "agents"
+                    "agents",
+                    ""
                   ]
                 },
                 "description": "Workflow: 'Admin Dashboard' -> 'Agent Creation' -> 'Create Agent Username and Password' -> 'Save Agent Account'",
@@ -519,7 +527,8 @@
                   "path": [
                     "api",
                     "admin",
-                    "agents"
+                    "agents",
+                    ""
                   ],
                   "query": [
                     {
@@ -573,7 +582,8 @@
                     "api",
                     "admin",
                     "agents",
-                    "{{agent_id}}"
+                    "{{agent_id}}",
+                    ""
                   ]
                 },
                 "description": "Retrieves profile and assignment details for a specific agent.",
@@ -615,7 +625,8 @@
                     "api",
                     "admin",
                     "agents",
-                    "{{agent_id}}"
+                    "{{agent_id}}",
+                    ""
                   ]
                 },
                 "description": "Updates territory or contact info for an agent.",
@@ -667,7 +678,8 @@
                     "admin",
                     "agents",
                     "{{agent_id}}",
-                    "toggle-status"
+                    "toggle-status",
+                    ""
                   ]
                 },
                 "description": "Activates or deactivates field duty privileges for the agent.",
@@ -714,7 +726,8 @@
                     "api",
                     "admin",
                     "tracking",
-                    "live"
+                    "live",
+                    ""
                   ]
                 },
                 "description": "Workflow: 'Agent Location Tracking' -> 'View Agent Location on Map' -> 'View Latitude Longitude and Location'\nReturns latest GPS coordinates, battery level, address, and online status for all field agents.",
@@ -758,7 +771,8 @@
                     "tracking",
                     "agents",
                     "{{agent_id}}",
-                    "history"
+                    "history",
+                    ""
                   ],
                   "query": [
                     {
@@ -812,7 +826,8 @@
                     "api",
                     "admin",
                     "payments",
-                    "records"
+                    "records",
+                    ""
                   ],
                   "query": [
                     {
@@ -877,7 +892,8 @@
                     "admin",
                     "payments",
                     "records",
-                    "{{donation_id}}"
+                    "{{donation_id}}",
+                    ""
                   ]
                 },
                 "description": "Workflow: 'Manage Payment Records' - Updates transaction settlement status and bank reference.",
@@ -928,7 +944,8 @@
                     "api",
                     "admin",
                     "payments",
-                    "summary"
+                    "summary",
+                    ""
                   ]
                 },
                 "description": "Returns total collections, breakdown by payment mode (UPI, Cash, Card, NEFT), and settlement status.",
@@ -974,7 +991,8 @@
                   "path": [
                     "api",
                     "admin",
-                    "donations"
+                    "donations",
+                    ""
                   ],
                   "query": [
                     {
@@ -1033,7 +1051,8 @@
                     "api",
                     "admin",
                     "donations",
-                    "{{donation_id}}"
+                    "{{donation_id}}",
+                    ""
                   ]
                 },
                 "description": "Retrieves full donation record including donor details, product/cash values, and receipt number.",
@@ -1076,7 +1095,8 @@
                     "admin",
                     "donations",
                     "{{donation_id}}",
-                    "verify"
+                    "verify",
+                    ""
                   ]
                 },
                 "description": "Admin marks donation status as 'VERIFIED'.",
@@ -1122,7 +1142,8 @@
                   "path": [
                     "api",
                     "admin",
-                    "leaves"
+                    "leaves",
+                    ""
                   ],
                   "query": [
                     {
@@ -1176,7 +1197,8 @@
                     "api",
                     "admin",
                     "leaves",
-                    "{{leave_id}}"
+                    "{{leave_id}}",
+                    ""
                   ]
                 },
                 "description": "Retrieves detailed information of an agent's leave or week-off request.",
@@ -1219,7 +1241,8 @@
                     "admin",
                     "leaves",
                     "{{leave_id}}",
-                    "review"
+                    "review",
+                    ""
                   ]
                 },
                 "description": "Workflow: 'Approve Request?' -> Yes: 'Approve Leave or Week-Off'",
@@ -1271,7 +1294,8 @@
                     "admin",
                     "leaves",
                     "{{leave_id}}",
-                    "review"
+                    "review",
+                    ""
                   ]
                 },
                 "description": "Workflow: 'Approve Request?' -> No: 'Reject Request'",
@@ -1326,7 +1350,8 @@
                   "path": [
                     "api",
                     "admin",
-                    "targets"
+                    "targets",
+                    ""
                   ]
                 },
                 "description": "Sets daily goals for an agent to display on their mobile app dashboard.",
@@ -1392,7 +1417,8 @@
                   "path": [
                     "api",
                     "admin",
-                    "targets"
+                    "targets",
+                    ""
                   ],
                   "query": [
                     {
@@ -1440,7 +1466,8 @@
                   "path": [
                     "api",
                     "admin",
-                    "attendance"
+                    "attendance",
+                    ""
                   ],
                   "query": [
                     {
@@ -1504,7 +1531,8 @@
                   "path": [
                     "api",
                     "agent",
-                    "dashboard"
+                    "dashboard",
+                    ""
                   ]
                 },
                 "description": "Workflow: 'Agent Dashboard' - Returns agent profile, attendance status, today's targets & progress, today's collection summary, and latest leave request status.",
@@ -1550,7 +1578,8 @@
                   "path": [
                     "api",
                     "agent",
-                    "location"
+                    "location",
+                    ""
                   ]
                 },
                 "description": "Workflow: 'Access Location' -> 'Request GPS Permission if Needed' -> 'Capture Agent Location' -> 'Send Location to Backend' -> 'Admin Can Track Agent'",
@@ -1601,7 +1630,8 @@
                     "api",
                     "agent",
                     "location",
-                    "latest"
+                    "latest",
+                    ""
                   ]
                 },
                 "description": "Retrieves the agent's most recently uploaded GPS coordinates.",
@@ -1648,7 +1678,8 @@
                     "api",
                     "agent",
                     "donations",
-                    "cash"
+                    "cash",
+                    ""
                   ]
                 },
                 "description": "Workflow: 'Donation Entry' -> 'Donation Type' -> 'Cash' -> 'Enter Cash Donation' -> 'Save Donation Record'",
@@ -1723,7 +1754,8 @@
                     "api",
                     "agent",
                     "donations",
-                    "product"
+                    "product",
+                    ""
                   ]
                 },
                 "description": "Workflow: 'Donation Entry' -> 'Donation Type' -> 'Products' -> 'Enter Product or Grocery Donation' -> 'Save Donation Record'",
@@ -1790,7 +1822,8 @@
                   "path": [
                     "api",
                     "agent",
-                    "donations"
+                    "donations",
+                    ""
                   ],
                   "query": [
                     {
@@ -1844,7 +1877,8 @@
                     "api",
                     "agent",
                     "donations",
-                    "{{donation_id}}"
+                    "{{donation_id}}",
+                    ""
                   ]
                 },
                 "description": "Retrieves a specific donation record with receipt number and donor details.",
@@ -1886,7 +1920,8 @@
                     "api",
                     "agent",
                     "donations",
-                    "{{donation_id}}"
+                    "{{donation_id}}",
+                    ""
                   ]
                 },
                 "description": "Workflow: 'Save Donation Record' -> 'Update Donation Details'",
@@ -1937,7 +1972,8 @@
                     "api",
                     "agent",
                     "donations",
-                    "summary"
+                    "summary",
+                    ""
                   ]
                 },
                 "description": "Returns total cash collected, cash entries count, and product quantities collected today.",
@@ -1984,7 +2020,8 @@
                     "api",
                     "agent",
                     "attendance",
-                    "check-in"
+                    "check-in",
+                    ""
                   ]
                 },
                 "description": "Workflow: 'Attendance' - Agent checks in for field duty with GPS location and address.",
@@ -2035,7 +2072,8 @@
                     "api",
                     "agent",
                     "attendance",
-                    "check-out"
+                    "check-out",
+                    ""
                   ]
                 },
                 "description": "Workflow: 'Attendance' - Agent checks out at end of shift with GPS location.",
@@ -2086,7 +2124,8 @@
                     "api",
                     "agent",
                     "attendance",
-                    "status"
+                    "status",
+                    ""
                   ]
                 },
                 "description": "Returns check-in/out status, times, and coordinates for today.",
@@ -2128,7 +2167,8 @@
                     "api",
                     "agent",
                     "attendance",
-                    "history"
+                    "history",
+                    ""
                   ]
                 },
                 "description": "Retrieves historical attendance records for the agent.",
@@ -2170,7 +2210,8 @@
                     "api",
                     "agent",
                     "target",
-                    "today"
+                    "today",
+                    ""
                   ]
                 },
                 "description": "Workflow: 'Attendance' -> 'Display Today's Target' -> 'View Daily Target'\nReturns today's target goals alongside real-time achieved cash, product units, and completion percentage.",
@@ -2235,7 +2276,8 @@
                   "path": [
                     "api",
                     "agent",
-                    "leaves"
+                    "leaves",
+                    ""
                   ]
                 },
                 "description": "Workflow: 'Leave or Week-Off Request' -> 'Submit Request to Admin'",
@@ -2309,7 +2351,8 @@
                   "path": [
                     "api",
                     "agent",
-                    "leaves"
+                    "leaves",
+                    ""
                   ],
                   "query": [
                     {
@@ -2363,7 +2406,8 @@
                     "api",
                     "agent",
                     "leaves",
-                    "{{leave_id}}"
+                    "{{leave_id}}",
+                    ""
                   ]
                 },
                 "description": "Retrieves a specific leave request submitted by the agent.",

@@ -63,19 +63,24 @@ Open **[http://127.0.0.1:8000/](http://127.0.0.1:8000/)** in your browser to vie
 
 ---
 
-## 📬 Postman Collections & Environment
+## 📬 Postman Collections & Environments
 
-Two ready-to-import Postman files are provided in the project root:
+Ready-to-import Postman files are provided for both **Render Cloud Deployment** and **Local Development**:
 
-1. **`field_agent_api.postman_collection.json`** - Complete Postman Collection (v2.1) containing **44 requests** structured by workflow.
-2. **`field_agent_environment.postman_environment.json`** - Postman Environment file with pre-configured variables (`baseUrl`, `admin_token`, `agent_token`, `agent_id`, `donation_id`, `leave_id`, `target_id`).
+### ☁️ Render Production Deployment
+- **Collection:** **`wehelp_render_api.postman_collection.json`** (`baseUrl`: `https://wehelp-apk-backend.onrender.com`)
+- **Environment:** **`wehelp_render_environment.postman_environment.json`**
+
+### 💻 Local Development
+- **Collection:** **`field_agent_api.postman_collection.json`** (`baseUrl`: `http://127.0.0.1:8000`)
+- **Environment:** **`field_agent_environment.postman_environment.json`**
 
 ### How to Import and Use:
-1. Open Postman, click **Import**, and drag & drop both `field_agent_api.postman_collection.json` and `field_agent_environment.postman_environment.json`.
-2. Select the **Field Agent & Donation System - Local Environment** from the environment dropdown in the top right.
-3. Open `1. Authentication & Profile` -> run **Admin Login**: Postman's test script automatically captures the JWT token and saves it to `{{admin_token}}`.
+1. Open Postman, click **Import**, and drag & drop `wehelp_render_api.postman_collection.json` and `wehelp_render_environment.postman_environment.json`.
+2. Select **WeHelp APK Backend - Render Environment** from the top-right environment selector.
+3. Open folder `1. Authentication & Profile` -> run **Admin Login**: Postman's test script automatically captures the live JWT token and saves it to `{{admin_token}}`.
 4. Run **Agent Login**: The test script automatically saves the token to `{{agent_token}}`.
-5. You can now execute any Admin or Agent workflow request without manual token copying!
+5. You can now execute any Admin or Agent workflow request seamlessly against your Render backend!
 
 ---
 

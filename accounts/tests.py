@@ -111,3 +111,16 @@ class AccountsWorkflowTests(APITestCase):
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertIn("agent_profile", res.data)
         self.assertIn("attendance", res.data)
+
+    def test_login_without_trailing_slash_works(self):
+        """Verify that requests omitting trailing slash do not trigger 500 RuntimeError"""
+        payload = {
+            "username": "admin_test",
+            "password": "Password@123",
+            "role": "ADMIN",
+        }
+        # Post to '/api/auth/login' without trailing slash
+        res = self.client.post("/api/auth/login", payload)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertIn("tokens", res.data)
+

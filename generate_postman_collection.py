@@ -1,13 +1,14 @@
 import json
 import uuid
 
-def build_postman_collection():
+def build_postman_collection(base_url="http://127.0.0.1:8000", name="Field Agent & Donation Management System API"):
     collection = {
         "info": {
             "_postman_id": str(uuid.uuid4()),
-            "name": "Field Agent & Donation Management System API",
+            "name": name,
             "description": (
-                "# Field Agent & Donation Management System REST APIs\n\n"
+                f"# {name}\n\n"
+                f"**Target URL:** `{base_url}`\n\n"
                 "This Postman Collection covers the end-to-end workflow for both **Field Agents** and **Administrators** "
                 "as defined in the workflow diagram:\n"
                 "- **Authentication**: Role-based login (Admin/Agent) with JWT token auto-capture.\n"
@@ -23,7 +24,7 @@ def build_postman_collection():
             "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
         },
         "variable": [
-            {"key": "baseUrl", "value": "http://127.0.0.1:8000", "type": "string"},
+            {"key": "baseUrl", "value": base_url, "type": "string"},
             {"key": "admin_token", "value": "", "type": "string"},
             {"key": "agent_token", "value": "", "type": "string"},
             {"key": "refresh_token", "value": "", "type": "string"},
@@ -43,10 +44,14 @@ def build_postman_collection():
         }
 
     def make_request(name, method, url_path, query_params=None, body_data=None, token_var=None, test_script=None, description=""):
+        path_segments = [p for p in url_path.split("/") if p]
+        if url_path.endswith("/"):
+            path_segments.append("")
+
         url_obj = {
             "raw": f"{{{{baseUrl}}}}/{url_path}" + (("?" + "&".join([f"{q['key']}={q['value']}" for q in query_params])) if query_params else ""),
             "host": ["{{baseUrl}}"],
-            "path": [p for p in url_path.split("/") if p]
+            "path": path_segments
         }
         if query_params:
             url_obj["query"] = query_params
@@ -753,14 +758,14 @@ pm.test("Request status is PENDING", function () {
 
     return collection
 
-def build_postman_environment():
+def build_postman_environment(base_url="http://127.0.0.1:8000", name="Field Agent & Donation System - Local Environment"):
     return {
         "id": str(uuid.uuid4()),
-        "name": "Field Agent & Donation System - Local Environment",
+        "name": name,
         "values": [
             {
                 "key": "baseUrl",
-                "value": "http://127.0.0.1:8000",
+                "value": base_url,
                 "type": "default",
                 "enabled": True
             },
@@ -811,16 +816,35 @@ def build_postman_environment():
     }
 
 if __name__ == "__main__":
-    col = build_postman_collection()
-    env = build_postman_environment()
+    # 1. Local Environment & Collection
+    local_col = build_postman_collection(
+        base_url="http://127.0.0.1:8000",
+        name="Field Agent & Donation System API (Local)"
+    )
+    local_env = build_postman_environment(
+        base_url="http://127.0.0.1:8000",
+        name="Field Agent & Donation System - Local Environment"
+    )
 
-    col_path = "field_agent_api.postman_collection.json"
-    env_path = "field_agent_environment.postman_environment.json"
+    with open("field_agent_api.postman_collection.json", "w", encoding="utf-8") as f:
+        json.dump(local_col, f, indent=2, ensure_ascii=False)
+    with open("field_agent_environment.postman_environment.json", "w", encoding="utf-8") as f:
+        json.dump(local_env, f, indent=2, ensure_ascii=False)
 
-    with open(col_path, "w", encoding="utf-8") as f:
-        json.dump(col, f, indent=2, ensure_ascii=False)
-    print(f"Successfully generated {col_path} with {len(col['item'])} top-level categories.")
+    # 2. Render Production Environment & Collection
+    render_url = "https://wehelp-apk-backend.onrender.com"
+    render_col = build_postman_collection(
+        base_url=render_url,
+        name="WeHelp APK Backend API (Render)"
+    )
+    render_env = build_postman_environment(
+        base_url=render_url,
+        name="WeHelp APK Backend - Render Environment"
+    )
 
-    with open(env_path, "w", encoding="utf-8") as f:
-        json.dump(env, f, indent=2, ensure_ascii=False)
-    print(f"Successfully generated {env_path}.")
+    with open("wehelp_render_api.postman_collection.json", "w", encoding="utf-8") as f:
+        json.dump(render_col, f, indent=2, ensure_ascii=False)
+    with open("wehelp_render_environment.postman_environment.json", "w", encoding="utf-8") as f:
+        json.dump(render_env, f, indent=2, ensure_ascii=False)
+
+    print("Successfully generated both Local and Render Postman Collections and Environments!")
