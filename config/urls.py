@@ -61,9 +61,15 @@ def api_root_index(request):
     )
 
 
+# Django Admin branding
+admin.site.site_header = "WeHelp Administration"
+admin.site.site_title = "WeHelp Admin Portal"
+admin.site.index_title = "Welcome to WeHelp Management Portal"
+
+
 urlpatterns = [
     path("", api_root_index, name="api-root-index"),
-    path("admin-django/", admin.site.urls),
+    path("admin/", admin.site.urls),
     # Swagger & OpenAPI documentation
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path("api/docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
