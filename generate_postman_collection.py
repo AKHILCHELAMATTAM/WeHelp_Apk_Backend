@@ -870,4 +870,20 @@ if __name__ == "__main__":
     with open("wehelp_render_environment.postman_environment.json", "w", encoding="utf-8") as f:
         json.dump(render_env, f, indent=2, ensure_ascii=False)
 
-    print("Successfully generated both Local and Render Postman Collections and Environments!")
+    # 3. AWS EC2 Production Environment & Collection
+    ec2_url = "http://3.111.29.126"
+    ec2_col = build_postman_collection(
+        base_url=ec2_url,
+        name="WeHelp APK Backend API (AWS EC2)"
+    )
+    ec2_env = build_postman_environment(
+        base_url=ec2_url,
+        name="WeHelp APK Backend - AWS EC2 Environment"
+    )
+
+    with open("wehelp_ec2_api.postman_collection.json", "w", encoding="utf-8") as f:
+        json.dump(ec2_col, f, indent=2, ensure_ascii=False)
+    with open("wehelp_ec2_environment.postman_environment.json", "w", encoding="utf-8") as f:
+        json.dump(ec2_env, f, indent=2, ensure_ascii=False)
+
+    print("Successfully generated Local, Render, and AWS EC2 Postman Collections and Environments!")
