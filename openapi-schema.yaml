@@ -1,0 +1,3726 @@
+openapi: 3.0.3
+info:
+  title: Agent & Donation Management API
+  version: 1.0.0
+  description: Complete backend APIs for Android mobile application and Admin web
+    dashboard. Supports Role-based login (Admin/Agent), Agent Account Creation, Live
+    GPS Location Tracking, Cash & Product/Grocery Donation Logging, Payment Records
+    Management, Attendance & Daily Targets, Leave/Week-off Requests and Approvals.
+paths:
+  /:
+    get:
+      operationId: root_retrieve
+      description: Interactive catalog of all available API endpoints in the system.
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+                description: Unspecified response body
+          description: ''
+  /api/admin/agents/:
+    get:
+      operationId: api_admin_agents_list
+      description: |-
+        Admin workflow:
+        'Agent Creation' -> 'Create Agent Username and Password' -> 'Save Agent Account'
+        Also lists all agents with search & filtering.
+      parameters:
+      - in: query
+        name: is_active
+        schema:
+          type: boolean
+        description: Filter by active status (true/false)
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - in: query
+        name: search
+        schema:
+          type: string
+        description: Search by name, username, employee ID, or assigned area
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAgentDetailList'
+          description: ''
+    post:
+      operationId: api_admin_agents_create
+      description: |-
+        Admin workflow:
+        'Agent Creation' -> 'Create Agent Username and Password' -> 'Save Agent Account'
+        Also lists all agents with search & filtering.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AgentCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AgentCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentCreate'
+          description: ''
+  /api/admin/agents/{id}/:
+    get:
+      operationId: api_admin_agents_retrieve
+      description: Admin endpoint to retrieve, update, or remove an agent account.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentDetail'
+          description: ''
+    put:
+      operationId: api_admin_agents_update
+      description: Admin endpoint to retrieve, update, or remove an agent account.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentDetailRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AgentDetailRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AgentDetailRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentDetail'
+          description: ''
+    patch:
+      operationId: api_admin_agents_partial_update
+      description: Admin endpoint to retrieve, update, or remove an agent account.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedAgentDetailRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedAgentDetailRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedAgentDetailRequest'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentDetail'
+          description: ''
+    delete:
+      operationId: api_admin_agents_destroy
+      description: Admin endpoint to retrieve, update, or remove an agent account.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/admin/agents/{id}/toggle-status/:
+    post:
+      operationId: api_admin_agents_toggle_status_create
+      description: Admin endpoint to toggle an agent account between active and deactivated
+        status.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+                description: Unspecified response body
+          description: ''
+  /api/admin/attendance/:
+    get:
+      operationId: api_admin_attendance_list
+      description: Admin endpoint to view and filter attendance records across all
+        agents.
+      parameters:
+      - in: query
+        name: agent_id
+        schema:
+          type: integer
+        description: Filter by Agent ID
+      - in: query
+        name: date
+        schema:
+          type: string
+        description: Filter by date (YYYY-MM-DD)
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - in: query
+        name: status
+        schema:
+          type: string
+        description: Filter by PRESENT, HALF_DAY, ABSENT
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAttendanceList'
+          description: ''
+  /api/admin/dashboard/:
+    get:
+      operationId: api_admin_dashboard_retrieve
+      description: Returns top-level overview metrics, online agents, pending leaves,
+        and recent donations for Admin Dashboard.
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+                description: Unspecified response body
+          description: ''
+  /api/admin/donations/:
+    get:
+      operationId: api_admin_donations_list
+      description: Admin endpoint to view and filter all donations.
+      parameters:
+      - in: query
+        name: agent_id
+        schema:
+          type: integer
+        description: Filter by Agent ID
+      - in: query
+        name: date
+        schema:
+          type: string
+        description: Date filter (YYYY-MM-DD)
+      - in: query
+        name: donation_type
+        schema:
+          type: string
+        description: CASH or PRODUCT
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - in: query
+        name: search
+        schema:
+          type: string
+        description: Search receipt, donor, or product
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedDonationDetailList'
+          description: ''
+  /api/admin/donations/{id}/:
+    get:
+      operationId: api_admin_donations_retrieve
+      description: Admin endpoint to view, edit, or delete any donation record.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DonationDetail'
+          description: ''
+    put:
+      operationId: api_admin_donations_update
+      description: Admin endpoint to view, edit, or delete any donation record.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DonationDetailRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DonationDetailRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DonationDetailRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DonationDetail'
+          description: ''
+    patch:
+      operationId: api_admin_donations_partial_update
+      description: Admin endpoint to view, edit, or delete any donation record.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedDonationDetailRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedDonationDetailRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedDonationDetailRequest'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DonationDetail'
+          description: ''
+    delete:
+      operationId: api_admin_donations_destroy
+      description: Admin endpoint to view, edit, or delete any donation record.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/admin/donations/{id}/verify/:
+    post:
+      operationId: api_admin_donations_verify_create
+      description: Admin endpoint to verify a donation record.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DonationDetail'
+          description: ''
+  /api/admin/leaves/:
+    get:
+      operationId: api_admin_leaves_list
+      description: |-
+        Admin workflow:
+        'Leave and Week-Off Management' -> 'View Agent Requests'
+      parameters:
+      - in: query
+        name: agent_id
+        schema:
+          type: integer
+        description: Filter by Agent ID
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - in: query
+        name: request_type
+        schema:
+          type: string
+        description: LEAVE or WEEK_OFF
+      - in: query
+        name: status
+        schema:
+          type: string
+        description: PENDING, APPROVED, REJECTED
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedLeaveRequestDetailList'
+          description: ''
+  /api/admin/leaves/{id}/:
+    get:
+      operationId: api_admin_leaves_retrieve
+      description: Admin endpoint to view a specific request in detail.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaveRequestDetail'
+          description: ''
+  /api/admin/leaves/{id}/review/:
+    post:
+      operationId: api_admin_leaves_review_create
+      description: Approves or Rejects a pending agent leave/week-off request.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LeaveRequestReviewRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LeaveRequestReviewRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LeaveRequestReviewRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaveRequestDetail'
+          description: ''
+  /api/admin/payments/records/:
+    get:
+      operationId: api_admin_payments_records_list
+      description: |-
+        Admin workflow:
+        'Payment Details' -> 'View or Manage Payment Records'
+        Lists cash payment transactions with payment modes and settlement status.
+      parameters:
+      - in: query
+        name: agent_id
+        schema:
+          type: integer
+        description: Filter by Agent ID
+      - in: query
+        name: date
+        schema:
+          type: string
+        description: Filter by date (YYYY-MM-DD)
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - in: query
+        name: payment_mode
+        schema:
+          type: string
+        description: CASH, UPI, CARD, BANK_TRANSFER, CHEQUE
+      - in: query
+        name: payment_status
+        schema:
+          type: string
+        description: COMPLETED, PENDING, FAILED, REFUNDED
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPaymentRecordList'
+          description: ''
+  /api/admin/payments/records/{id}/:
+    get:
+      operationId: api_admin_payments_records_retrieve
+      description: |-
+        Admin workflow:
+        'Manage Payment Records' - update settlement status or transaction reference.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentRecord'
+          description: ''
+    put:
+      operationId: api_admin_payments_records_update
+      description: |-
+        Admin workflow:
+        'Manage Payment Records' - update settlement status or transaction reference.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentStatusUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PaymentStatusUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PaymentStatusUpdateRequest'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentStatusUpdate'
+          description: ''
+    patch:
+      operationId: api_admin_payments_records_partial_update
+      description: |-
+        Admin workflow:
+        'Manage Payment Records' - update settlement status or transaction reference.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPaymentStatusUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedPaymentStatusUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedPaymentStatusUpdateRequest'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentStatusUpdate'
+          description: ''
+  /api/admin/payments/summary/:
+    get:
+      operationId: api_admin_payments_summary_retrieve
+      description: 'Admin financial summary: total revenue, payment mode breakdowns,
+        today vs overall collections.'
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+                description: Unspecified response body
+          description: ''
+  /api/admin/targets/:
+    get:
+      operationId: api_admin_targets_list
+      description: Admin endpoint to set or list daily targets for agents.
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedDailyTargetList'
+          description: ''
+    post:
+      operationId: api_admin_targets_create
+      description: Admin endpoint to set or list daily targets for agents.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DailyTargetRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DailyTargetRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DailyTargetRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DailyTarget'
+          description: ''
+  /api/admin/targets/{id}/:
+    get:
+      operationId: api_admin_targets_retrieve
+      description: Admin endpoint to view, edit, or delete a daily target.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DailyTarget'
+          description: ''
+    put:
+      operationId: api_admin_targets_update
+      description: Admin endpoint to view, edit, or delete a daily target.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DailyTargetRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DailyTargetRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DailyTargetRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DailyTarget'
+          description: ''
+    patch:
+      operationId: api_admin_targets_partial_update
+      description: Admin endpoint to view, edit, or delete a daily target.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedDailyTargetRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedDailyTargetRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedDailyTargetRequest'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DailyTarget'
+          description: ''
+    delete:
+      operationId: api_admin_targets_destroy
+      description: Admin endpoint to view, edit, or delete a daily target.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/admin/tracking/agents/{agent_id}/history/:
+    get:
+      operationId: api_admin_tracking_agents_history_list
+      description: |-
+        Admin endpoint to view historical breadcrumb path of an agent.
+        Supports filtering by specific date (YYYY-MM-DD).
+      parameters:
+      - in: path
+        name: agent_id
+        schema:
+          type: integer
+        required: true
+      - in: query
+        name: date
+        schema:
+          type: string
+        description: Filter history by date (YYYY-MM-DD)
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAgentLocationList'
+          description: ''
+  /api/admin/tracking/live/:
+    get:
+      operationId: api_admin_tracking_live_list
+      description: Returns latest GPS coordinates and status for all active field
+        agents.
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LiveAgentTracking'
+          description: ''
+  /api/agent/attendance/check-in/:
+    post:
+      operationId: api_agent_attendance_check_in_create
+      description: Records check-in timestamp and coordinates for today.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckInRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CheckInRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CheckInRequest'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attendance'
+          description: ''
+  /api/agent/attendance/check-out/:
+    post:
+      operationId: api_agent_attendance_check_out_create
+      description: Records check-out timestamp and coordinates for today.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckOutRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CheckOutRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CheckOutRequest'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attendance'
+          description: ''
+  /api/agent/attendance/history/:
+    get:
+      operationId: api_agent_attendance_history_list
+      description: Returns historical attendance records for the authenticated agent.
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAttendanceList'
+          description: ''
+  /api/agent/attendance/status/:
+    get:
+      operationId: api_agent_attendance_status_retrieve
+      description: Returns today's attendance status for the authenticated agent.
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+                description: Unspecified response body
+          description: ''
+  /api/agent/dashboard/:
+    get:
+      operationId: api_agent_dashboard_retrieve
+      description: Returns today's attendance status, today's targets & progress,
+        recent donations, and latest leave status for Agent Dashboard.
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+                description: Unspecified response body
+          description: ''
+  /api/agent/donations/:
+    get:
+      operationId: api_agent_donations_list
+      description: 'Agent endpoint: lists all donations collected by the authenticated
+        agent.'
+      parameters:
+      - in: query
+        name: date
+        schema:
+          type: string
+        description: Filter by date (YYYY-MM-DD)
+      - in: query
+        name: donation_type
+        schema:
+          type: string
+        description: Filter by CASH or PRODUCT
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedDonationDetailList'
+          description: ''
+  /api/agent/donations/{id}/:
+    get:
+      operationId: api_agent_donations_retrieve
+      description: |-
+        Agent workflow:
+        'Update Donation Details'
+        Retrieves or updates details of a donation previously entered by this agent.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DonationDetail'
+          description: ''
+    put:
+      operationId: api_agent_donations_update
+      description: |-
+        Agent workflow:
+        'Update Donation Details'
+        Retrieves or updates details of a donation previously entered by this agent.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DonationUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DonationUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DonationUpdateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DonationUpdate'
+          description: ''
+    patch:
+      operationId: api_agent_donations_partial_update
+      description: |-
+        Agent workflow:
+        'Update Donation Details'
+        Retrieves or updates details of a donation previously entered by this agent.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedDonationUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedDonationUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedDonationUpdateRequest'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DonationUpdate'
+          description: ''
+  /api/agent/donations/cash/:
+    post:
+      operationId: api_agent_donations_cash_create
+      description: Records a new cash/monetary donation entry and generates receipt.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CashDonationCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CashDonationCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CashDonationCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DonationDetail'
+          description: ''
+  /api/agent/donations/product/:
+    post:
+      operationId: api_agent_donations_product_create
+      description: Records a new in-kind product or grocery donation and generates
+        receipt.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductDonationCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProductDonationCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProductDonationCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DonationDetail'
+          description: ''
+  /api/agent/donations/summary/:
+    get:
+      operationId: api_agent_donations_summary_retrieve
+      description: Returns today's and all-time donation summary for the logged-in
+        agent.
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+                description: Unspecified response body
+          description: ''
+  /api/agent/leaves/:
+    get:
+      operationId: api_agent_leaves_list
+      description: |-
+        Agent workflow:
+        'Leave or Week-Off Request' -> 'Submit Request to Admin'
+        'Approval or Rejection Status' (view list of own requests)
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - in: query
+        name: request_type
+        schema:
+          type: string
+        description: LEAVE or WEEK_OFF
+      - in: query
+        name: status
+        schema:
+          type: string
+        description: PENDING, APPROVED, REJECTED
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedLeaveRequestDetailList'
+          description: ''
+    post:
+      operationId: api_agent_leaves_create
+      description: |-
+        Agent workflow:
+        'Leave or Week-Off Request' -> 'Submit Request to Admin'
+        'Approval or Rejection Status' (view list of own requests)
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LeaveRequestCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LeaveRequestCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LeaveRequestCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaveRequestCreate'
+          description: ''
+  /api/agent/leaves/{id}/:
+    get:
+      operationId: api_agent_leaves_retrieve
+      description: 'Agent endpoint: view details of a specific submitted request.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaveRequestDetail'
+          description: ''
+  /api/agent/location/:
+    post:
+      operationId: api_agent_location_create
+      description: Receives real-time GPS coordinates captured by the agent Android
+        device.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentLocationSendRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AgentLocationSendRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AgentLocationSendRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentLocation'
+          description: ''
+  /api/agent/location/latest/:
+    get:
+      operationId: api_agent_location_latest_retrieve
+      description: Returns latest recorded GPS location of the authenticated agent.
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentLocation'
+          description: ''
+  /api/agent/target/today/:
+    get:
+      operationId: api_agent_target_today_retrieve
+      description: Returns today's daily target assigned to agent and achieved collection
+        metrics.
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentDailyTargetProgress'
+          description: ''
+  /api/auth/login/:
+    post:
+      operationId: api_auth_login_create
+      description: Authenticates Admin or Agent according to role chosen in Android
+        App.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoleBasedLoginRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RoleBasedLoginRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RoleBasedLoginRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+          description: ''
+  /api/auth/profile/:
+    get:
+      operationId: api_auth_profile_retrieve
+      description: Retrieves or updates the profile of the currently logged-in user.
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+          description: ''
+    put:
+      operationId: api_auth_profile_update
+      description: Retrieves or updates the profile of the currently logged-in user.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserProfileRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserProfileRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserProfileRequest'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+          description: ''
+    patch:
+      operationId: api_auth_profile_partial_update
+      description: Retrieves or updates the profile of the currently logged-in user.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUserProfileRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUserProfileRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUserProfileRequest'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+          description: ''
+  /api/auth/token/refresh/:
+    post:
+      operationId: api_auth_token_refresh_create
+      description: |-
+        Takes a refresh type JSON web token and returns an access type JSON web
+        token if the refresh token is valid.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefresh'
+          description: ''
+components:
+  schemas:
+    ActionEnum:
+      enum:
+      - APPROVE
+      - REJECT
+      type: string
+      description: |-
+        * `APPROVE` - Approve Leave or Week-Off
+        * `REJECT` - Reject Request
+    AgentCreate:
+      type: object
+      description: |-
+        Admin workflow:
+        'Agent Creation' -> 'Create Agent Username and Password' -> 'Save Agent Account'
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        username:
+          type: string
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        email:
+          title: Email address
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        phone_number:
+          type: string
+          nullable: true
+          maxLength: 20
+        employee_id:
+          type: string
+          nullable: true
+          description: Unique employee/agent code
+          maxLength: 50
+        assigned_area:
+          type: string
+          nullable: true
+          description: Operational territory or assigned region
+          maxLength: 150
+        is_active_agent:
+          type: boolean
+          default: true
+          description: Active status for field duty
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - username
+    AgentCreateRequest:
+      type: object
+      description: |-
+        Admin workflow:
+        'Agent Creation' -> 'Create Agent Username and Password' -> 'Save Agent Account'
+      properties:
+        username:
+          type: string
+          minLength: 1
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        password:
+          type: string
+          writeOnly: true
+          minLength: 6
+          description: Password to assign to the new agent
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        email:
+          title: Email address
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        phone_number:
+          type: string
+          nullable: true
+          maxLength: 20
+        employee_id:
+          type: string
+          nullable: true
+          description: Unique employee/agent code
+          maxLength: 50
+        assigned_area:
+          type: string
+          nullable: true
+          description: Operational territory or assigned region
+          maxLength: 150
+        is_active_agent:
+          type: boolean
+          default: true
+          description: Active status for field duty
+      required:
+      - password
+      - username
+    AgentDailyTargetProgress:
+      type: object
+      description: |-
+        Workflow:
+        'Attendance' -> 'Display Today's Target' -> 'View Daily Target'
+        Combines target goals with real-time achieved metrics.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        date:
+          type: string
+          format: date
+        target_cash_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          description: Target cash donation amount to collect for the day
+        target_donations_count:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          description: Target number of successful donation entries for the day
+        target_product_units:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          description: Target quantity of products or grocery items to collect
+        notes:
+          type: string
+          nullable: true
+          description: Specific focus/instructions for today
+        achieved_cash_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          readOnly: true
+        achieved_donations_count:
+          type: integer
+          readOnly: true
+        achieved_product_units:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          readOnly: true
+        cash_completion_percentage:
+          type: number
+          format: double
+          readOnly: true
+        count_completion_percentage:
+          type: number
+          format: double
+          readOnly: true
+        is_cash_target_met:
+          type: boolean
+          readOnly: true
+      required:
+      - achieved_cash_amount
+      - achieved_donations_count
+      - achieved_product_units
+      - cash_completion_percentage
+      - count_completion_percentage
+      - id
+      - is_cash_target_met
+    AgentDetail:
+      type: object
+      description: Admin management view for agent profiles.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        username:
+          type: string
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        email:
+          title: Email address
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        role:
+          allOf:
+          - $ref: '#/components/schemas/RoleEnum'
+          readOnly: true
+          description: |-
+            User role in the system: Admin or Agent
+
+            * `ADMIN` - Admin
+            * `AGENT` - Agent
+        phone_number:
+          type: string
+          nullable: true
+          maxLength: 20
+        employee_id:
+          type: string
+          nullable: true
+          description: Unique employee/agent code
+          maxLength: 50
+        assigned_area:
+          type: string
+          nullable: true
+          description: Operational territory or assigned region
+          maxLength: 150
+        is_active_agent:
+          type: boolean
+          description: Specifies if agent is currently active for field duties
+        is_active:
+          type: boolean
+          title: Active
+          description: Designates whether this user should be treated as active. Unselect
+            this instead of deleting accounts.
+        created_by:
+          type: integer
+          readOnly: true
+          nullable: true
+        created_by_name:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        last_login:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+      required:
+      - created_at
+      - created_by
+      - created_by_name
+      - id
+      - last_login
+      - role
+      - updated_at
+      - username
+    AgentDetailRequest:
+      type: object
+      description: Admin management view for agent profiles.
+      properties:
+        username:
+          type: string
+          minLength: 1
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        email:
+          title: Email address
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        phone_number:
+          type: string
+          nullable: true
+          maxLength: 20
+        employee_id:
+          type: string
+          nullable: true
+          description: Unique employee/agent code
+          maxLength: 50
+        assigned_area:
+          type: string
+          nullable: true
+          description: Operational territory or assigned region
+          maxLength: 150
+        is_active_agent:
+          type: boolean
+          description: Specifies if agent is currently active for field duties
+        is_active:
+          type: boolean
+          title: Active
+          description: Designates whether this user should be treated as active. Unselect
+            this instead of deleting accounts.
+      required:
+      - username
+    AgentLocation:
+      type: object
+      description: Detailed location serializer for viewing coordinates history.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        agent_id:
+          type: integer
+          readOnly: true
+        agent_username:
+          type: string
+          readOnly: true
+        agent_name:
+          type: string
+          readOnly: true
+        latitude:
+          type: number
+          format: double
+          description: Latitude coordinate in decimal degrees
+        longitude:
+          type: number
+          format: double
+          description: Longitude coordinate in decimal degrees
+        accuracy:
+          type: number
+          format: double
+          nullable: true
+          description: GPS accuracy in meters
+        speed:
+          type: number
+          format: double
+          nullable: true
+          description: Current movement speed (km/h)
+        altitude:
+          type: number
+          format: double
+          nullable: true
+          description: Altitude in meters
+        battery_level:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          nullable: true
+          description: Device battery percentage at time of capture (0-100)
+        address:
+          type: string
+          nullable: true
+          description: Human-readable address or landmark
+          maxLength: 255
+        recorded_at:
+          type: string
+          format: date-time
+          description: Timestamp when GPS fix was recorded on device
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - agent_id
+      - agent_name
+      - agent_username
+      - created_at
+      - id
+      - latitude
+      - longitude
+    AgentLocationSendRequest:
+      type: object
+      description: |-
+        Used by Agent on Android App:
+        'Send Location to Backend'
+      properties:
+        latitude:
+          type: number
+          format: double
+          description: Latitude coordinate in decimal degrees
+        longitude:
+          type: number
+          format: double
+          description: Longitude coordinate in decimal degrees
+        accuracy:
+          type: number
+          format: double
+          nullable: true
+          description: GPS accuracy in meters
+        speed:
+          type: number
+          format: double
+          nullable: true
+          description: Current movement speed (km/h)
+        altitude:
+          type: number
+          format: double
+          nullable: true
+          description: Altitude in meters
+        battery_level:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          nullable: true
+          description: Device battery percentage at time of capture (0-100)
+        address:
+          type: string
+          nullable: true
+          description: Human-readable address or landmark
+          maxLength: 255
+        recorded_at:
+          type: string
+          format: date-time
+          description: Timestamp when GPS fix was recorded on device
+      required:
+      - latitude
+      - longitude
+    Attendance:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        agent_id:
+          type: integer
+          readOnly: true
+        agent_username:
+          type: string
+          readOnly: true
+        agent_name:
+          type: string
+          readOnly: true
+        date:
+          type: string
+          format: date
+          readOnly: true
+        check_in_time:
+          type: string
+          format: date-time
+          nullable: true
+        check_out_time:
+          type: string
+          format: date-time
+          nullable: true
+        check_in_latitude:
+          type: number
+          format: double
+          nullable: true
+        check_in_longitude:
+          type: number
+          format: double
+          nullable: true
+        check_in_address:
+          type: string
+          nullable: true
+          maxLength: 255
+        check_out_latitude:
+          type: number
+          format: double
+          nullable: true
+        check_out_longitude:
+          type: number
+          format: double
+          nullable: true
+        check_out_address:
+          type: string
+          nullable: true
+          maxLength: 255
+        status:
+          $ref: '#/components/schemas/AttendanceStatusEnum'
+        notes:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - agent_id
+      - agent_name
+      - agent_username
+      - created_at
+      - date
+      - id
+      - updated_at
+    AttendanceStatusEnum:
+      enum:
+      - PRESENT
+      - HALF_DAY
+      - ABSENT
+      type: string
+      description: |-
+        * `PRESENT` - Present
+        * `HALF_DAY` - Half Day
+        * `ABSENT` - Absent
+    BlankEnum:
+      enum:
+      - ''
+    CashDonationCreateRequest:
+      type: object
+      description: |-
+        Agent workflow:
+        'Donation Entry' -> 'Donation Type' -> 'Cash' -> 'Enter Cash Donation' -> 'Save Donation Record'
+      properties:
+        donor_name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        donor_phone:
+          type: string
+          nullable: true
+          maxLength: 20
+        donor_email:
+          nullable: true
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        donor_address:
+          type: string
+          nullable: true
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          nullable: true
+          description: Monetary donation amount (Cash donations)
+        currency:
+          type: string
+          minLength: 1
+          maxLength: 10
+        payment_mode:
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/PaymentModeEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        transaction_reference:
+          type: string
+          nullable: true
+          description: Bank transaction ID, UPI reference or Cheque number
+          maxLength: 100
+        notes:
+          type: string
+          nullable: true
+        latitude:
+          type: number
+          format: double
+          nullable: true
+          description: GPS latitude where donation was received
+        longitude:
+          type: number
+          format: double
+          nullable: true
+          description: GPS longitude where donation was received
+      required:
+      - donor_name
+    CheckInRequest:
+      type: object
+      properties:
+        latitude:
+          type: number
+          format: double
+          nullable: true
+        longitude:
+          type: number
+          format: double
+          nullable: true
+        address:
+          type: string
+          maxLength: 255
+        notes:
+          type: string
+    CheckOutRequest:
+      type: object
+      properties:
+        latitude:
+          type: number
+          format: double
+          nullable: true
+        longitude:
+          type: number
+          format: double
+          nullable: true
+        address:
+          type: string
+          maxLength: 255
+        notes:
+          type: string
+    DailyTarget:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        agent:
+          type: integer
+        agent_id:
+          type: integer
+          readOnly: true
+        agent_username:
+          type: string
+          readOnly: true
+        agent_name:
+          type: string
+          readOnly: true
+        date:
+          type: string
+          format: date
+        target_cash_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          description: Target cash donation amount to collect for the day
+        target_donations_count:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          description: Target number of successful donation entries for the day
+        target_product_units:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          description: Target quantity of products or grocery items to collect
+        notes:
+          type: string
+          nullable: true
+          description: Specific focus/instructions for today
+        assigned_by:
+          type: integer
+          readOnly: true
+          nullable: true
+        assigned_by_name:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - agent
+      - agent_id
+      - agent_name
+      - agent_username
+      - assigned_by
+      - assigned_by_name
+      - created_at
+      - id
+      - updated_at
+    DailyTargetRequest:
+      type: object
+      properties:
+        agent:
+          type: integer
+        date:
+          type: string
+          format: date
+        target_cash_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          description: Target cash donation amount to collect for the day
+        target_donations_count:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          description: Target number of successful donation entries for the day
+        target_product_units:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          description: Target quantity of products or grocery items to collect
+        notes:
+          type: string
+          nullable: true
+          description: Specific focus/instructions for today
+      required:
+      - agent
+    DonationDetail:
+      type: object
+      description: Detailed serializer for donation records with agent and receipt
+        info.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        receipt_number:
+          type: string
+          description: Unique receipt number issued to donor
+          maxLength: 36
+        donation_type:
+          $ref: '#/components/schemas/DonationTypeEnum'
+        agent_id:
+          type: integer
+          readOnly: true
+        agent_username:
+          type: string
+          readOnly: true
+        agent_name:
+          type: string
+          readOnly: true
+        donor_name:
+          type: string
+          maxLength: 120
+        donor_phone:
+          type: string
+          nullable: true
+          maxLength: 20
+        donor_email:
+          nullable: true
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        donor_address:
+          type: string
+          nullable: true
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          nullable: true
+          description: Monetary donation amount (Cash donations)
+        currency:
+          type: string
+          maxLength: 10
+        payment_mode:
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/PaymentModeEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        payment_status:
+          allOf:
+          - $ref: '#/components/schemas/PaymentStatusEnum'
+          description: |-
+            Payment transaction settlement status
+
+            * `COMPLETED` - Completed
+            * `PENDING` - Pending
+            * `FAILED` - Failed
+            * `REFUNDED` - Refunded
+        transaction_reference:
+          type: string
+          nullable: true
+          description: Bank transaction ID, UPI reference or Cheque number
+          maxLength: 100
+        product_name:
+          type: string
+          nullable: true
+          description: Name of donated item (e.g., Rice, Wheat, Blankets, School Books)
+          maxLength: 150
+        product_category:
+          type: string
+          nullable: true
+          description: 'Item category: Grocery, Food Kits, Clothes, Medical, etc.'
+          maxLength: 100
+        quantity:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+          description: Quantity of product/grocery item
+        unit:
+          type: string
+          nullable: true
+          description: Unit of measure (e.g. kg, litres, packets, boxes, pieces)
+          maxLength: 30
+        estimated_value:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          nullable: true
+          description: Approximate monetary valuation of the donated items
+        status:
+          $ref: '#/components/schemas/DonationStatusEnum'
+        notes:
+          type: string
+          nullable: true
+        latitude:
+          type: number
+          format: double
+          nullable: true
+          description: GPS latitude where donation was received
+        longitude:
+          type: number
+          format: double
+          nullable: true
+          description: GPS longitude where donation was received
+        verified_by_name:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - agent_id
+      - agent_name
+      - agent_username
+      - donation_type
+      - donor_name
+      - id
+      - updated_at
+      - verified_by_name
+    DonationDetailRequest:
+      type: object
+      description: Detailed serializer for donation records with agent and receipt
+        info.
+      properties:
+        receipt_number:
+          type: string
+          minLength: 1
+          description: Unique receipt number issued to donor
+          maxLength: 36
+        donation_type:
+          $ref: '#/components/schemas/DonationTypeEnum'
+        donor_name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        donor_phone:
+          type: string
+          nullable: true
+          maxLength: 20
+        donor_email:
+          nullable: true
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        donor_address:
+          type: string
+          nullable: true
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          nullable: true
+          description: Monetary donation amount (Cash donations)
+        currency:
+          type: string
+          minLength: 1
+          maxLength: 10
+        payment_mode:
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/PaymentModeEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        payment_status:
+          allOf:
+          - $ref: '#/components/schemas/PaymentStatusEnum'
+          description: |-
+            Payment transaction settlement status
+
+            * `COMPLETED` - Completed
+            * `PENDING` - Pending
+            * `FAILED` - Failed
+            * `REFUNDED` - Refunded
+        transaction_reference:
+          type: string
+          nullable: true
+          description: Bank transaction ID, UPI reference or Cheque number
+          maxLength: 100
+        product_name:
+          type: string
+          nullable: true
+          description: Name of donated item (e.g., Rice, Wheat, Blankets, School Books)
+          maxLength: 150
+        product_category:
+          type: string
+          nullable: true
+          description: 'Item category: Grocery, Food Kits, Clothes, Medical, etc.'
+          maxLength: 100
+        quantity:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+          description: Quantity of product/grocery item
+        unit:
+          type: string
+          nullable: true
+          description: Unit of measure (e.g. kg, litres, packets, boxes, pieces)
+          maxLength: 30
+        estimated_value:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          nullable: true
+          description: Approximate monetary valuation of the donated items
+        status:
+          $ref: '#/components/schemas/DonationStatusEnum'
+        notes:
+          type: string
+          nullable: true
+        latitude:
+          type: number
+          format: double
+          nullable: true
+          description: GPS latitude where donation was received
+        longitude:
+          type: number
+          format: double
+          nullable: true
+          description: GPS longitude where donation was received
+        created_at:
+          type: string
+          format: date-time
+      required:
+      - donation_type
+      - donor_name
+    DonationStatusEnum:
+      enum:
+      - SUBMITTED
+      - VERIFIED
+      - CANCELLED
+      type: string
+      description: |-
+        * `SUBMITTED` - Submitted
+        * `VERIFIED` - Verified
+        * `CANCELLED` - Cancelled
+    DonationTypeEnum:
+      enum:
+      - CASH
+      - PRODUCT
+      type: string
+      description: |-
+        * `CASH` - Cash
+        * `PRODUCT` - Product / Grocery
+    DonationUpdate:
+      type: object
+      description: |-
+        Agent workflow:
+        'Update Donation Details'
+        Allows updating donor details, quantities, notes, or payment reference.
+      properties:
+        donor_name:
+          type: string
+          maxLength: 120
+        donor_phone:
+          type: string
+          nullable: true
+          maxLength: 20
+        donor_email:
+          nullable: true
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        donor_address:
+          type: string
+          nullable: true
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          nullable: true
+          description: Monetary donation amount (Cash donations)
+        payment_mode:
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/PaymentModeEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        transaction_reference:
+          type: string
+          nullable: true
+          description: Bank transaction ID, UPI reference or Cheque number
+          maxLength: 100
+        product_name:
+          type: string
+          nullable: true
+          description: Name of donated item (e.g., Rice, Wheat, Blankets, School Books)
+          maxLength: 150
+        product_category:
+          type: string
+          nullable: true
+          description: 'Item category: Grocery, Food Kits, Clothes, Medical, etc.'
+          maxLength: 100
+        quantity:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+          description: Quantity of product/grocery item
+        unit:
+          type: string
+          nullable: true
+          description: Unit of measure (e.g. kg, litres, packets, boxes, pieces)
+          maxLength: 30
+        estimated_value:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          nullable: true
+          description: Approximate monetary valuation of the donated items
+        notes:
+          type: string
+          nullable: true
+      required:
+      - donor_name
+    DonationUpdateRequest:
+      type: object
+      description: |-
+        Agent workflow:
+        'Update Donation Details'
+        Allows updating donor details, quantities, notes, or payment reference.
+      properties:
+        donor_name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        donor_phone:
+          type: string
+          nullable: true
+          maxLength: 20
+        donor_email:
+          nullable: true
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        donor_address:
+          type: string
+          nullable: true
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          nullable: true
+          description: Monetary donation amount (Cash donations)
+        payment_mode:
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/PaymentModeEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        transaction_reference:
+          type: string
+          nullable: true
+          description: Bank transaction ID, UPI reference or Cheque number
+          maxLength: 100
+        product_name:
+          type: string
+          nullable: true
+          description: Name of donated item (e.g., Rice, Wheat, Blankets, School Books)
+          maxLength: 150
+        product_category:
+          type: string
+          nullable: true
+          description: 'Item category: Grocery, Food Kits, Clothes, Medical, etc.'
+          maxLength: 100
+        quantity:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+          description: Quantity of product/grocery item
+        unit:
+          type: string
+          nullable: true
+          description: Unit of measure (e.g. kg, litres, packets, boxes, pieces)
+          maxLength: 30
+        estimated_value:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          nullable: true
+          description: Approximate monetary valuation of the donated items
+        notes:
+          type: string
+          nullable: true
+      required:
+      - donor_name
+    LeaveRequestCreate:
+      type: object
+      description: |-
+        Agent workflow:
+        'Leave or Week-Off Request' -> 'Submit Request to Admin'
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        request_type:
+          allOf:
+          - $ref: '#/components/schemas/RequestTypeEnum'
+          description: |-
+            Type of request: LEAVE or WEEK_OFF
+
+            * `LEAVE` - Leave
+            * `WEEK_OFF` - Week Off
+        start_date:
+          type: string
+          format: date
+          description: First day of leave or week-off
+        end_date:
+          type: string
+          format: date
+          description: Last day of leave or week-off
+        reason:
+          type: string
+          description: Reason for leave or week-off request
+        total_days:
+          type: integer
+          readOnly: true
+          description: Total number of days requested
+        status:
+          allOf:
+          - $ref: '#/components/schemas/LeaveStatusEnum'
+          readOnly: true
+          description: |-
+            Current approval status
+
+            * `PENDING` - Pending
+            * `APPROVED` - Approved
+            * `REJECTED` - Rejected
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - end_date
+      - id
+      - reason
+      - request_type
+      - start_date
+      - status
+      - total_days
+    LeaveRequestCreateRequest:
+      type: object
+      description: |-
+        Agent workflow:
+        'Leave or Week-Off Request' -> 'Submit Request to Admin'
+      properties:
+        request_type:
+          allOf:
+          - $ref: '#/components/schemas/RequestTypeEnum'
+          description: |-
+            Type of request: LEAVE or WEEK_OFF
+
+            * `LEAVE` - Leave
+            * `WEEK_OFF` - Week Off
+        start_date:
+          type: string
+          format: date
+          description: First day of leave or week-off
+        end_date:
+          type: string
+          format: date
+          description: Last day of leave or week-off
+        reason:
+          type: string
+          minLength: 1
+          description: Reason for leave or week-off request
+      required:
+      - end_date
+      - reason
+      - request_type
+      - start_date
+    LeaveRequestDetail:
+      type: object
+      description: |-
+        Detailed serializer to view Leave/Week-Off requests and approval status.
+        Agent: 'Approval or Rejection Status'
+        Admin: 'View Agent Requests'
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        agent_id:
+          type: integer
+          readOnly: true
+        agent_username:
+          type: string
+          readOnly: true
+        agent_name:
+          type: string
+          readOnly: true
+        request_type:
+          allOf:
+          - $ref: '#/components/schemas/RequestTypeEnum'
+          description: |-
+            Type of request: LEAVE or WEEK_OFF
+
+            * `LEAVE` - Leave
+            * `WEEK_OFF` - Week Off
+        start_date:
+          type: string
+          format: date
+          description: First day of leave or week-off
+        end_date:
+          type: string
+          format: date
+          description: Last day of leave or week-off
+        total_days:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          description: Total number of days requested
+        reason:
+          type: string
+          description: Reason for leave or week-off request
+        status:
+          allOf:
+          - $ref: '#/components/schemas/LeaveStatusEnum'
+          description: |-
+            Current approval status
+
+            * `PENDING` - Pending
+            * `APPROVED` - Approved
+            * `REJECTED` - Rejected
+        admin_remarks:
+          type: string
+          nullable: true
+          description: Remarks/notes added by administrator during approval or rejection
+        reviewed_by_name:
+          type: string
+          readOnly: true
+        reviewed_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - agent_id
+      - agent_name
+      - agent_username
+      - created_at
+      - end_date
+      - id
+      - reason
+      - request_type
+      - reviewed_by_name
+      - start_date
+      - updated_at
+    LeaveRequestReviewRequest:
+      type: object
+      description: |-
+        Admin workflow:
+        'Approve Request?' -> 'Approve Leave or Week-Off' / 'Reject Request'
+      properties:
+        action:
+          allOf:
+          - $ref: '#/components/schemas/ActionEnum'
+          description: |-
+            Decision: APPROVE or REJECT
+
+            * `APPROVE` - Approve Leave or Week-Off
+            * `REJECT` - Reject Request
+        admin_remarks:
+          type: string
+          description: Optional remarks or feedback explaining approval or rejection
+      required:
+      - action
+    LeaveStatusEnum:
+      enum:
+      - PENDING
+      - APPROVED
+      - REJECTED
+      type: string
+      description: |-
+        * `PENDING` - Pending
+        * `APPROVED` - Approved
+        * `REJECTED` - Rejected
+    LiveAgentTracking:
+      type: object
+      description: |-
+        Used by Admin:
+        'Agent Location Tracking' -> 'View Agent Location on Map' -> 'View Latitude Longitude and Location'
+      properties:
+        agent_id:
+          type: integer
+        agent_username:
+          type: string
+        agent_name:
+          type: string
+        phone_number:
+          type: string
+          nullable: true
+        employee_id:
+          type: string
+          nullable: true
+        assigned_area:
+          type: string
+          nullable: true
+        latitude:
+          type: number
+          format: double
+          nullable: true
+        longitude:
+          type: number
+          format: double
+          nullable: true
+        accuracy:
+          type: number
+          format: double
+          nullable: true
+        battery_level:
+          type: integer
+          nullable: true
+        address:
+          type: string
+          nullable: true
+        last_updated:
+          type: string
+          format: date-time
+          nullable: true
+        is_online:
+          type: boolean
+      required:
+      - accuracy
+      - address
+      - agent_id
+      - agent_name
+      - agent_username
+      - assigned_area
+      - battery_level
+      - employee_id
+      - is_online
+      - last_updated
+      - latitude
+      - longitude
+      - phone_number
+    NullEnum:
+      enum:
+      - null
+    PaginatedAgentDetailList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentDetail'
+    PaginatedAgentLocationList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentLocation'
+    PaginatedAttendanceList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Attendance'
+    PaginatedDailyTargetList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/DailyTarget'
+    PaginatedDonationDetailList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/DonationDetail'
+    PaginatedLeaveRequestDetailList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/LeaveRequestDetail'
+    PaginatedPaymentRecordList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/PaymentRecord'
+    PatchedAgentDetailRequest:
+      type: object
+      description: Admin management view for agent profiles.
+      properties:
+        username:
+          type: string
+          minLength: 1
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        email:
+          title: Email address
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        phone_number:
+          type: string
+          nullable: true
+          maxLength: 20
+        employee_id:
+          type: string
+          nullable: true
+          description: Unique employee/agent code
+          maxLength: 50
+        assigned_area:
+          type: string
+          nullable: true
+          description: Operational territory or assigned region
+          maxLength: 150
+        is_active_agent:
+          type: boolean
+          description: Specifies if agent is currently active for field duties
+        is_active:
+          type: boolean
+          title: Active
+          description: Designates whether this user should be treated as active. Unselect
+            this instead of deleting accounts.
+    PatchedDailyTargetRequest:
+      type: object
+      properties:
+        agent:
+          type: integer
+        date:
+          type: string
+          format: date
+        target_cash_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          description: Target cash donation amount to collect for the day
+        target_donations_count:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          description: Target number of successful donation entries for the day
+        target_product_units:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          description: Target quantity of products or grocery items to collect
+        notes:
+          type: string
+          nullable: true
+          description: Specific focus/instructions for today
+    PatchedDonationDetailRequest:
+      type: object
+      description: Detailed serializer for donation records with agent and receipt
+        info.
+      properties:
+        receipt_number:
+          type: string
+          minLength: 1
+          description: Unique receipt number issued to donor
+          maxLength: 36
+        donation_type:
+          $ref: '#/components/schemas/DonationTypeEnum'
+        donor_name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        donor_phone:
+          type: string
+          nullable: true
+          maxLength: 20
+        donor_email:
+          nullable: true
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        donor_address:
+          type: string
+          nullable: true
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          nullable: true
+          description: Monetary donation amount (Cash donations)
+        currency:
+          type: string
+          minLength: 1
+          maxLength: 10
+        payment_mode:
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/PaymentModeEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        payment_status:
+          allOf:
+          - $ref: '#/components/schemas/PaymentStatusEnum'
+          description: |-
+            Payment transaction settlement status
+
+            * `COMPLETED` - Completed
+            * `PENDING` - Pending
+            * `FAILED` - Failed
+            * `REFUNDED` - Refunded
+        transaction_reference:
+          type: string
+          nullable: true
+          description: Bank transaction ID, UPI reference or Cheque number
+          maxLength: 100
+        product_name:
+          type: string
+          nullable: true
+          description: Name of donated item (e.g., Rice, Wheat, Blankets, School Books)
+          maxLength: 150
+        product_category:
+          type: string
+          nullable: true
+          description: 'Item category: Grocery, Food Kits, Clothes, Medical, etc.'
+          maxLength: 100
+        quantity:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+          description: Quantity of product/grocery item
+        unit:
+          type: string
+          nullable: true
+          description: Unit of measure (e.g. kg, litres, packets, boxes, pieces)
+          maxLength: 30
+        estimated_value:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          nullable: true
+          description: Approximate monetary valuation of the donated items
+        status:
+          $ref: '#/components/schemas/DonationStatusEnum'
+        notes:
+          type: string
+          nullable: true
+        latitude:
+          type: number
+          format: double
+          nullable: true
+          description: GPS latitude where donation was received
+        longitude:
+          type: number
+          format: double
+          nullable: true
+          description: GPS longitude where donation was received
+        created_at:
+          type: string
+          format: date-time
+    PatchedDonationUpdateRequest:
+      type: object
+      description: |-
+        Agent workflow:
+        'Update Donation Details'
+        Allows updating donor details, quantities, notes, or payment reference.
+      properties:
+        donor_name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        donor_phone:
+          type: string
+          nullable: true
+          maxLength: 20
+        donor_email:
+          nullable: true
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        donor_address:
+          type: string
+          nullable: true
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          nullable: true
+          description: Monetary donation amount (Cash donations)
+        payment_mode:
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/PaymentModeEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        transaction_reference:
+          type: string
+          nullable: true
+          description: Bank transaction ID, UPI reference or Cheque number
+          maxLength: 100
+        product_name:
+          type: string
+          nullable: true
+          description: Name of donated item (e.g., Rice, Wheat, Blankets, School Books)
+          maxLength: 150
+        product_category:
+          type: string
+          nullable: true
+          description: 'Item category: Grocery, Food Kits, Clothes, Medical, etc.'
+          maxLength: 100
+        quantity:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+          description: Quantity of product/grocery item
+        unit:
+          type: string
+          nullable: true
+          description: Unit of measure (e.g. kg, litres, packets, boxes, pieces)
+          maxLength: 30
+        estimated_value:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          nullable: true
+          description: Approximate monetary valuation of the donated items
+        notes:
+          type: string
+          nullable: true
+    PatchedPaymentStatusUpdateRequest:
+      type: object
+      description: 'Admin management: update payment settlement status.'
+      properties:
+        payment_status:
+          allOf:
+          - $ref: '#/components/schemas/PaymentStatusEnum'
+          description: |-
+            Payment transaction settlement status
+
+            * `COMPLETED` - Completed
+            * `PENDING` - Pending
+            * `FAILED` - Failed
+            * `REFUNDED` - Refunded
+        transaction_reference:
+          type: string
+          nullable: true
+          description: Bank transaction ID, UPI reference or Cheque number
+          maxLength: 100
+        notes:
+          type: string
+          nullable: true
+    PatchedUserProfileRequest:
+      type: object
+      description: Serializes profile information for authenticated user.
+      properties:
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        email:
+          title: Email address
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        phone_number:
+          type: string
+          nullable: true
+          maxLength: 20
+        assigned_area:
+          type: string
+          nullable: true
+          description: Operational territory or assigned region
+          maxLength: 150
+    PaymentModeEnum:
+      enum:
+      - CASH
+      - UPI
+      - CARD
+      - BANK_TRANSFER
+      - CHEQUE
+      type: string
+      description: |-
+        * `CASH` - Cash
+        * `UPI` - UPI / QR
+        * `CARD` - Debit / Credit Card
+        * `BANK_TRANSFER` - Bank Transfer / NEFT
+        * `CHEQUE` - Cheque
+    PaymentRecord:
+      type: object
+      description: |-
+        Admin workflow:
+        'Payment Details' -> 'View or Manage Payment Records'
+        Specifically highlights cash transactions and financial payment tracking.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        receipt_number:
+          type: string
+          description: Unique receipt number issued to donor
+          maxLength: 36
+        agent_id:
+          type: integer
+          readOnly: true
+        agent_username:
+          type: string
+          readOnly: true
+        agent_name:
+          type: string
+          readOnly: true
+        donor_name:
+          type: string
+          maxLength: 120
+        donor_phone:
+          type: string
+          nullable: true
+          maxLength: 20
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          nullable: true
+          description: Monetary donation amount (Cash donations)
+        currency:
+          type: string
+          maxLength: 10
+        payment_mode:
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/PaymentModeEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        payment_status:
+          allOf:
+          - $ref: '#/components/schemas/PaymentStatusEnum'
+          description: |-
+            Payment transaction settlement status
+
+            * `COMPLETED` - Completed
+            * `PENDING` - Pending
+            * `FAILED` - Failed
+            * `REFUNDED` - Refunded
+        transaction_reference:
+          type: string
+          nullable: true
+          description: Bank transaction ID, UPI reference or Cheque number
+          maxLength: 100
+        status:
+          $ref: '#/components/schemas/DonationStatusEnum'
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - agent_id
+      - agent_name
+      - agent_username
+      - donor_name
+      - id
+      - updated_at
+    PaymentStatusEnum:
+      enum:
+      - COMPLETED
+      - PENDING
+      - FAILED
+      - REFUNDED
+      type: string
+      description: |-
+        * `COMPLETED` - Completed
+        * `PENDING` - Pending
+        * `FAILED` - Failed
+        * `REFUNDED` - Refunded
+    PaymentStatusUpdate:
+      type: object
+      description: 'Admin management: update payment settlement status.'
+      properties:
+        payment_status:
+          allOf:
+          - $ref: '#/components/schemas/PaymentStatusEnum'
+          description: |-
+            Payment transaction settlement status
+
+            * `COMPLETED` - Completed
+            * `PENDING` - Pending
+            * `FAILED` - Failed
+            * `REFUNDED` - Refunded
+        transaction_reference:
+          type: string
+          nullable: true
+          description: Bank transaction ID, UPI reference or Cheque number
+          maxLength: 100
+        notes:
+          type: string
+          nullable: true
+    PaymentStatusUpdateRequest:
+      type: object
+      description: 'Admin management: update payment settlement status.'
+      properties:
+        payment_status:
+          allOf:
+          - $ref: '#/components/schemas/PaymentStatusEnum'
+          description: |-
+            Payment transaction settlement status
+
+            * `COMPLETED` - Completed
+            * `PENDING` - Pending
+            * `FAILED` - Failed
+            * `REFUNDED` - Refunded
+        transaction_reference:
+          type: string
+          nullable: true
+          description: Bank transaction ID, UPI reference or Cheque number
+          maxLength: 100
+        notes:
+          type: string
+          nullable: true
+    ProductDonationCreateRequest:
+      type: object
+      description: |-
+        Agent workflow:
+        'Donation Entry' -> 'Donation Type' -> 'Products' -> 'Enter Product or Grocery Donation' -> 'Save Donation Record'
+      properties:
+        donor_name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        donor_phone:
+          type: string
+          nullable: true
+          maxLength: 20
+        donor_email:
+          nullable: true
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        donor_address:
+          type: string
+          nullable: true
+        product_name:
+          type: string
+          nullable: true
+          description: Name of donated item (e.g., Rice, Wheat, Blankets, School Books)
+          maxLength: 150
+        product_category:
+          type: string
+          nullable: true
+          description: 'Item category: Grocery, Food Kits, Clothes, Medical, etc.'
+          maxLength: 100
+        quantity:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+          description: Quantity of product/grocery item
+        unit:
+          type: string
+          nullable: true
+          description: Unit of measure (e.g. kg, litres, packets, boxes, pieces)
+          maxLength: 30
+        estimated_value:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          nullable: true
+          description: Approximate monetary valuation of the donated items
+        notes:
+          type: string
+          nullable: true
+        latitude:
+          type: number
+          format: double
+          nullable: true
+          description: GPS latitude where donation was received
+        longitude:
+          type: number
+          format: double
+          nullable: true
+          description: GPS longitude where donation was received
+      required:
+      - donor_name
+    RequestTypeEnum:
+      enum:
+      - LEAVE
+      - WEEK_OFF
+      type: string
+      description: |-
+        * `LEAVE` - Leave
+        * `WEEK_OFF` - Week Off
+    RoleBasedLoginRequest:
+      type: object
+      description: |-
+        Handles authentication based on selected role (Admin or Agent) from the Android App.
+        Matches workflow:
+        'Select User Role' -> 'Admin' / 'Agent' -> 'Enter Assigned Username and Password' -> 'Credentials Valid?'
+      properties:
+        username:
+          type: string
+          minLength: 1
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+        role:
+          allOf:
+          - $ref: '#/components/schemas/RoleEnum'
+          description: |-
+            Role chosen in the mobile app: ADMIN or AGENT
+
+            * `ADMIN` - Admin
+            * `AGENT` - Agent
+      required:
+      - password
+      - role
+      - username
+    RoleEnum:
+      enum:
+      - ADMIN
+      - AGENT
+      type: string
+      description: |-
+        * `ADMIN` - Admin
+        * `AGENT` - Agent
+    TokenRefresh:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+      required:
+      - access
+      - refresh
+    TokenRefreshRequest:
+      type: object
+      properties:
+        refresh:
+          type: string
+          minLength: 1
+      required:
+      - refresh
+    UserProfile:
+      type: object
+      description: Serializes profile information for authenticated user.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        username:
+          type: string
+          readOnly: true
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        email:
+          title: Email address
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        role:
+          allOf:
+          - $ref: '#/components/schemas/RoleEnum'
+          readOnly: true
+          description: |-
+            User role in the system: Admin or Agent
+
+            * `ADMIN` - Admin
+            * `AGENT` - Agent
+        phone_number:
+          type: string
+          nullable: true
+          maxLength: 20
+        employee_id:
+          type: string
+          readOnly: true
+          nullable: true
+          description: Unique employee/agent code
+        assigned_area:
+          type: string
+          nullable: true
+          description: Operational territory or assigned region
+          maxLength: 150
+        is_active_agent:
+          type: boolean
+          readOnly: true
+          description: Specifies if agent is currently active for field duties
+        date_joined:
+          type: string
+          format: date-time
+          readOnly: true
+        last_login:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+      required:
+      - date_joined
+      - employee_id
+      - id
+      - is_active_agent
+      - last_login
+      - role
+      - username
+    UserProfileRequest:
+      type: object
+      description: Serializes profile information for authenticated user.
+      properties:
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        email:
+          title: Email address
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        phone_number:
+          type: string
+          nullable: true
+          maxLength: 20
+        assigned_area:
+          type: string
+          nullable: true
+          description: Operational territory or assigned region
+          maxLength: 150
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
