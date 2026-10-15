@@ -99,6 +99,29 @@ def build_postman_collection(base_url="http://127.0.0.1:8000", name="Field Agent
         "description": "Role-based login for Admin and Agent, token refresh, and user profile management.",
         "item": [
             make_request(
+                name="0. Initial Database Setup / Seed (Run this first on Render)",
+                method="POST",
+                url_path="api/auth/setup-seed/",
+                body_data={},
+                test_script="""
+pm.test("Status code is 200 OK", function () {
+    pm.response.to.have.status(200);
+});
+pm.test("Database seeded successfully", function () {
+    var jsonData = pm.response.json();
+    pm.expect(jsonData.message).to.include("seeded successfully");
+});
+""",
+                description=(
+                    "⚡ ONE-CLICK SETUP FOR CLOUD HOSTING (RENDER):\n"
+                    "Runs database migrations and creates the default test accounts:\n"
+                    "- Admin: admin / Admin@1234\n"
+                    "- Agent 1: agent_rahul / Agent@1234\n"
+                    "- Agent 2: agent_priya / Agent@1234\n"
+                    "Execute this request first when connecting to a fresh Render backend."
+                )
+            ),
+            make_request(
                 name="Admin Login (Auto-captures admin_token)",
                 method="POST",
                 url_path="api/auth/login/",

@@ -1,3 +1,4 @@
+from django.core.management import call_command
 from django.db import models
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import generics, serializers, status
@@ -13,6 +14,47 @@ from .serializers import (
     RoleBasedLoginSerializer,
     UserProfileSerializer,
 )
+
+
+class DatabaseSeedView(APIView):
+    """
+    Utility endpoint to initialize and seed database on cloud hosting like Render.
+    Allows one-click setup from Postman.
+    """
+
+    permission_classes = [AllowAny]
+
+    @extend_schema(
+        request=None,
+        responses={200: serializers.DictField()},
+        description="One-click database initialization to run migrations and seed default admin and agents on remote hosting like Render.",
+    )
+    def post(self, request, *args, **kwargs):
+        try:
+            call_command("migrate", interactive=False)
+            call_command("seed_data")
+        except Exception as e:
+            return Response(
+                {"error": f"Migration/seed failed: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        return Response(
+            {
+                "message": "Remote database seeded successfully!",
+                "admin_account": {
+                    "username": "admin",
+                    "password": "Admin@1234",
+                    "role": "ADMIN",
+                },
+                "agent_accounts": [
+                    {"username": "agent_rahul", "password": "Agent@1234", "role": "AGENT"},
+                    {"username": "agent_priya", "password": "Agent@1234", "role": "AGENT"},
+                ],
+                "status": "Ready for login and testing",
+            },
+            status=status.HTTP_200_OK,
+        )
 
 
 class RoleBasedLoginView(APIView):

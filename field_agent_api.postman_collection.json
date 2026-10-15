@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "9a7a1824-cd08-4fa4-9c34-b70bdfc6dbf0",
+    "_postman_id": "3a4306d5-0750-4c8e-9511-9235719f74ea",
     "name": "Field Agent & Donation System API (Local)",
     "description": "# Field Agent & Donation System API (Local)\n\n**Target URL:** `http://127.0.0.1:8000`\n\nThis Postman Collection covers the end-to-end workflow for both **Field Agents** and **Administrators** as defined in the workflow diagram:\n- **Authentication**: Role-based login (Admin/Agent) with JWT token auto-capture.\n- **Admin Workflow**: Agent Creation, Real-time GPS Location Tracking, Leave & Week-Off Management, Payment Records Management, and Daily Targets.\n- **Agent Workflow**: GPS Location Streaming, Cash & Product/Grocery Donation Logging, Attendance Check-In/Out, Daily Targets & Progress Tracking, and Leave Requests.\n\n### ⚡ Quick Start:\n1. Send the **Admin Login** request under `1. Authentication & Profile` to automatically set `{{admin_token}}`.\n2. Send the **Agent Login** request under `1. Authentication & Profile` to automatically set `{{agent_token}}`.\n3. You can now execute any Admin or Agent request in this collection seamlessly!",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -52,6 +52,64 @@
       "name": "1. Authentication & Profile",
       "description": "Role-based login for Admin and Agent, token refresh, and user profile management.",
       "item": [
+        {
+          "name": "0. Initial Database Setup / Seed (Run this first on Render)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/setup-seed/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "setup-seed",
+                ""
+              ]
+            },
+            "description": "⚡ ONE-CLICK SETUP FOR CLOUD HOSTING (RENDER):\nRuns database migrations and creates the default test accounts:\n- Admin: admin / Admin@1234\n- Agent 1: agent_rahul / Agent@1234\n- Agent 2: agent_priya / Agent@1234\nExecute this request first when connecting to a fresh Render backend.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Database seeded successfully\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.message).to.include(\"seeded successfully\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
         {
           "name": "Admin Login (Auto-captures admin_token)",
           "request": {

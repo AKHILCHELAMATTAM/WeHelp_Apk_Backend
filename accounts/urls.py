@@ -6,11 +6,14 @@ from .views import (
     AdminAgentDetailView,
     AdminAgentListCreateView,
     AdminAgentStatusToggleView,
+    DatabaseSeedView,
     RoleBasedLoginView,
     UserProfileView,
 )
 
 urlpatterns = [
+    # Remote cloud initial setup / seed
+    path("auth/setup-seed/", DatabaseSeedView.as_view(), name="auth-setup-seed"),
     # Auth endpoints
     path("auth/login/", RoleBasedLoginView.as_view(), name="auth-login"),
     path("auth/token/refresh/", TokenRefreshView.as_view(), name="token-refresh"),
