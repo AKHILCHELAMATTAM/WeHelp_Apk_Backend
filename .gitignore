@@ -7,3 +7,6 @@ db.sqlite3
 .DS_Store
 .idea/
 .vscode/
+*.apk
+local.properties
+**/android/local.properties

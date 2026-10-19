@@ -164,3 +164,59 @@ class Donation(models.Model):
         if self.donation_type == "CASH":
             return f"Cash ({self.amount} {self.currency}) by {self.donor_name} - {self.receipt_number}"
         return f"Product ({self.quantity} {self.unit} {self.product_name}) by {self.donor_name} - {self.receipt_number}"
+
+
+class BankDetail(models.Model):
+    """
+    Organization Bank Account details for donations and collections.
+    Configured by administrator, displayed in Agent mobile application.
+    """
+
+    account_holder_name = models.CharField(
+        max_length=150,
+        default="WeHelp Foundation",
+        help_text="Name of the account holder / organization",
+    )
+    bank_name = models.CharField(
+        max_length=120,
+        blank=True,
+        null=True,
+        help_text="Bank name (e.g., State Bank of India, HDFC Bank)",
+    )
+    account_number = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True,
+        help_text="Official bank account number",
+    )
+    ifsc_code = models.CharField(
+        max_length=20,
+        blank=True,
+        null=True,
+        help_text="Bank IFSC code (e.g., SBIN0001234)",
+    )
+    upi_id = models.CharField(
+        max_length=100,
+        default="wehelp.donations@upi",
+        help_text="Primary UPI Virtual Payment Address (VPA)",
+    )
+    branch_name = models.CharField(
+        max_length=120,
+        blank=True,
+        null=True,
+        help_text="Branch name and city",
+    )
+    is_active = models.BooleanField(
+        default=True,
+        help_text="Whether this bank account is currently active for donations",
+    )
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Organization Bank Account"
+        verbose_name_plural = "Organization Bank Accounts"
+
+    def __str__(self):
+        return f"{self.bank_name or 'Bank'} - {self.account_number or 'No Account'} ({self.account_holder_name})"
+

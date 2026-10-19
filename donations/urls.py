@@ -7,6 +7,8 @@ from .views import (
     AdminPaymentRecordsView,
     AdminPaymentSummaryView,
     AdminVerifyDonationView,
+    AgentBankDetailView,
+    AdminBankDetailView,
     AgentCreateCashDonationView,
     AgentCreateProductDonationView,
     AgentDonationDetailUpdateView,
@@ -15,6 +17,17 @@ from .views import (
 )
 
 urlpatterns = [
+    # Bank Details endpoint for Agent UPI/QR and Admin management
+    path(
+        "agent/bank-details/",
+        AgentBankDetailView.as_view(),
+        name="agent-bank-details",
+    ),
+    path(
+        "admin/bank-details/",
+        AdminBankDetailView.as_view(),
+        name="admin-bank-details",
+    ),
     # Agent donation entry endpoints
     path(
         "agent/donations/cash/",

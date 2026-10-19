@@ -198,3 +198,27 @@ class PaymentStatusUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Donation
         fields = ["payment_status", "transaction_reference", "notes"]
+
+
+from .models import BankDetail
+
+
+class BankDetailSerializer(serializers.ModelSerializer):
+    """
+    Serializer for organization bank account details displayed to field agents.
+    """
+
+    class Meta:
+        model = BankDetail
+        fields = [
+            "id",
+            "account_holder_name",
+            "bank_name",
+            "account_number",
+            "ifsc_code",
+            "upi_id",
+            "branch_name",
+            "is_active",
+            "updated_at",
+        ]
+

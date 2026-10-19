@@ -110,3 +110,50 @@ class DonationWorkflowTests(APITestCase):
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         donation.refresh_from_db()
         self.assertEqual(donation.payment_status, "COMPLETED")
+
+    def test_agent_retrieves_bank_details_gracefully_when_empty(self):
+        """Agent retrieves default/graceful payload when no bank details created"""
+        self.client.force_authenticate(user=self.agent)
+        url = reverse("agent-bank-details")
+        res = self.client.get(url)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data["account_holder_name"], "WeHelp Foundation")
+        self.assertIsNone(res.data["account_number"])
+
+    def test_agent_retrieves_bank_details_when_configured(self):
+        """Agent retrieves active bank details when configured by admin"""
+        from donations.models import BankDetail
+
+        BankDetail.objects.create(
+            account_holder_name="WeHelp Foundation Trust",
+            bank_name="State Bank of India",
+            account_number="39912345678",
+            ifsc_code="SBIN0001234",
+            upi_id="wehelp@sbi",
+            branch_name="Main City Branch",
+            is_active=True,
+        )
+
+        self.client.force_authenticate(user=self.agent)
+        url = reverse("agent-bank-details")
+        res = self.client.get(url)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data["bank_name"], "State Bank of India")
+        self.assertEqual(res.data["account_number"], "39912345678")
+        self.assertEqual(res.data["ifsc_code"], "SBIN0001234")
+
+    def test_admin_updates_bank_details(self):
+        """Admin configures or updates organization bank details"""
+        self.client.force_authenticate(user=self.admin)
+        url = reverse("admin-bank-details")
+        payload = {
+            "account_holder_name": "WeHelp Relief Trust",
+            "bank_name": "HDFC Bank",
+            "account_number": "50100234567890",
+            "ifsc_code": "HDFC0000123",
+            "upi_id": "wehelp.trust@hdfcbank",
+        }
+        res = self.client.put(url, payload)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data["account_number"], "50100234567890")
+

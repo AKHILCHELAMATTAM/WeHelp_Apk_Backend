@@ -386,3 +386,78 @@ class AdminPaymentSummaryView(APIView):
                 "payment_status_breakdown": list(status_breakdown),
             }
         )
+
+
+from .models import BankDetail
+from .serializers import BankDetailSerializer
+
+
+class AgentBankDetailView(APIView):
+    """
+    Returns active organization bank account details for UPI/QR and bank transfer collection.
+    Accessible to authenticated agents.
+    """
+
+    permission_classes = [IsAgentUserRole]
+
+    @extend_schema(
+        responses={200: BankDetailSerializer},
+        description="Returns active organization bank account details for donation collection.",
+    )
+    def get(self, request, *args, **kwargs):
+        bank_detail = BankDetail.objects.filter(is_active=True).first()
+        if not bank_detail:
+            return Response(
+                {
+                    "account_holder_name": "WeHelp Foundation",
+                    "bank_name": None,
+                    "account_number": None,
+                    "ifsc_code": None,
+                    "upi_id": "wehelp.donations@upi",
+                    "branch_name": None,
+                    "is_active": True,
+                }
+            )
+        serializer = BankDetailSerializer(bank_detail)
+        return Response(serializer.data)
+
+
+class AdminBankDetailView(APIView):
+    """
+    Allows administrators to view and configure organization bank account details.
+    """
+
+    permission_classes = [IsAdminUserRole]
+
+    @extend_schema(
+        responses={200: BankDetailSerializer},
+        description="Admin view for organization bank account details.",
+    )
+    def get(self, request, *args, **kwargs):
+        bank_detail = BankDetail.objects.filter(is_active=True).first()
+        if not bank_detail:
+            bank_detail = BankDetail.objects.create(
+                account_holder_name="WeHelp Foundation",
+                upi_id="wehelp.donations@upi",
+                is_active=True,
+            )
+        serializer = BankDetailSerializer(bank_detail)
+        return Response(serializer.data)
+
+    @extend_schema(
+        request=BankDetailSerializer,
+        responses={200: BankDetailSerializer},
+        description="Admin update for organization bank account details.",
+    )
+    def put(self, request, *args, **kwargs):
+        bank_detail = BankDetail.objects.filter(is_active=True).first()
+        if not bank_detail:
+            serializer = BankDetailSerializer(data=request.data)
+        else:
+            serializer = BankDetailSerializer(
+                bank_detail, data=request.data, partial=True
+            )
+        serializer.is_valid(raise_exception=True)
+        saved = serializer.save()
+        return Response(BankDetailSerializer(saved).data)
+

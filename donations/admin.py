@@ -35,3 +35,23 @@ class DonationAdmin(admin.ModelAdmin):
         "product_name",
     )
     readonly_fields = ("receipt_number", "created_at", "updated_at")
+
+
+from .models import BankDetail
+
+
+@admin.register(BankDetail)
+class BankDetailAdmin(admin.ModelAdmin):
+    list_display = (
+        "account_holder_name",
+        "bank_name",
+        "account_number",
+        "ifsc_code",
+        "upi_id",
+        "branch_name",
+        "is_active",
+        "updated_at",
+    )
+    list_filter = ("is_active",)
+    search_fields = ("account_holder_name", "bank_name", "account_number", "ifsc_code")
+
