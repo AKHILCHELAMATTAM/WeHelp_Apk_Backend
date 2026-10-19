@@ -14,8 +14,8 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _usernameController = TextEditingController();
-  final _passwordController = TextEditingController();
+  final _usernameController = TextEditingController(text: 'agent_rahul');
+  final _passwordController = TextEditingController(text: 'Agent@1234');
   bool _obscurePassword = true;
   bool _isLoading = false;
   String _currentServerUrl = ApiConstants.defaultBaseUrl;
@@ -345,39 +345,136 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  // Quick test credentials pills for testing on Android device
+                  // Quick two-agent credentials selector
                   Container(
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
                       color: const Color(0xFFF8FAFC),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(14),
                       border: Border.all(color: const Color(0xFFE2E8F0)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Quick Test Login:',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF64748B),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 6,
+                        const Row(
                           children: [
-                            ActionChip(
-                              avatar: const Icon(Icons.account_circle, size: 16, color: AppTheme.primary),
-                              label: const Text('agent_rahul', style: TextStyle(fontSize: 12)),
-                              onPressed: () => _fillDemoCredentials('agent_rahul', 'Agent@1234'),
+                            Icon(Icons.badge_outlined, size: 16, color: Color(0xFF64748B)),
+                            SizedBox(width: 6),
+                            Text(
+                              'Select Agent Login Account:',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF475569),
+                              ),
                             ),
-                            ActionChip(
-                              avatar: const Icon(Icons.account_circle, size: 16, color: AppTheme.primary),
-                              label: const Text('agent_priya', style: TextStyle(fontSize: 12)),
-                              onPressed: () => _fillDemoCredentials('agent_priya', 'Agent@1234'),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
+                            // Agent 1: agent_rahul
+                            Expanded(
+                              child: InkWell(
+                                onTap: () => _fillDemoCredentials('agent_rahul', 'Agent@1234'),
+                                borderRadius: BorderRadius.circular(10),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                                  decoration: BoxDecoration(
+                                    color: _usernameController.text == 'agent_rahul'
+                                        ? const Color(0xFFECFDF5)
+                                        : Colors.white,
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(
+                                      color: _usernameController.text == 'agent_rahul'
+                                          ? AppTheme.primary
+                                          : const Color(0xFFCBD5E1),
+                                      width: _usernameController.text == 'agent_rahul' ? 1.8 : 1,
+                                    ),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            Icons.account_circle,
+                                            size: 16,
+                                            color: _usernameController.text == 'agent_rahul'
+                                                ? AppTheme.primary
+                                                : const Color(0xFF64748B),
+                                          ),
+                                          const SizedBox(width: 4),
+                                          const Flexible(
+                                            child: Text(
+                                              'agent_rahul',
+                                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 4),
+                                      const Text(
+                                        'Pass: Agent@1234',
+                                        style: TextStyle(fontSize: 10, color: Color(0xFF64748B), fontWeight: FontWeight.w500),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            // Agent 2: agent_priya
+                            Expanded(
+                              child: InkWell(
+                                onTap: () => _fillDemoCredentials('agent_priya', 'Agent@1234'),
+                                borderRadius: BorderRadius.circular(10),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                                  decoration: BoxDecoration(
+                                    color: _usernameController.text == 'agent_priya'
+                                        ? const Color(0xFFECFDF5)
+                                        : Colors.white,
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(
+                                      color: _usernameController.text == 'agent_priya'
+                                          ? AppTheme.primary
+                                          : const Color(0xFFCBD5E1),
+                                      width: _usernameController.text == 'agent_priya' ? 1.8 : 1,
+                                    ),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            Icons.account_circle,
+                                            size: 16,
+                                            color: _usernameController.text == 'agent_priya'
+                                                ? AppTheme.primary
+                                                : const Color(0xFF64748B),
+                                          ),
+                                          const SizedBox(width: 4),
+                                          const Flexible(
+                                            child: Text(
+                                              'agent_priya',
+                                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 4),
+                                      const Text(
+                                        'Pass: Agent@1234',
+                                        style: TextStyle(fontSize: 10, color: Color(0xFF64748B), fontWeight: FontWeight.w500),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
                             ),
                           ],
                         ),
