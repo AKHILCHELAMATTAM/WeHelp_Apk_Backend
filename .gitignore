@@ -9,4 +9,5 @@ db.sqlite3
 .vscode/
 *.apk
 local.properties
-**/android/local.properties
+**/android/local.properties
+staticfiles/
