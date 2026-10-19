@@ -2,7 +2,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiConstants {
   // Default EC2 production server URL
-  static const String defaultBaseUrl = "http://3.111.29.126";
+  static const String defaultBaseUrl = "http://3.110.92.188";
   static const String prefsBaseUrlKey = "custom_base_url";
   static const String prefsTokenKey = "jwt_access_token";
   static const String prefsRefreshTokenKey = "jwt_refresh_token";

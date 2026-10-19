@@ -130,7 +130,7 @@ class _LoginScreenState extends State<LoginScreen> {
               controller: controller,
               decoration: const InputDecoration(
                 labelText: 'Backend Base URL',
-                hintText: 'http://3.111.29.126',
+                hintText: 'http://3.110.92.188',
                 prefixIcon: Icon(Icons.dns_rounded),
               ),
             ),
@@ -138,7 +138,7 @@ class _LoginScreenState extends State<LoginScreen> {
             Row(
               children: [
                 TextButton(
-                  onPressed: () => controller.text = 'http://3.111.29.126',
+                  onPressed: () => controller.text = 'http://3.110.92.188',
                   child: const Text('AWS EC2', style: TextStyle(fontSize: 12)),
                 ),
                 TextButton(

@@ -9,7 +9,7 @@ collection = {
         "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
     },
     "variable": [
-        {"key": "baseUrl", "value": "http://127.0.0.1:8000", "type": "string"},
+        {"key": "baseUrl", "value": "http://3.110.92.188", "type": "string"},
         {"key": "admin_username", "value": "admin", "type": "string"},
         {"key": "admin_password", "value": "admin123", "type": "string"},
         {"key": "agent_username", "value": "agent_rahul", "type": "string"},
@@ -812,7 +812,7 @@ prod_env = {
     "id": "wehelp-env-prod",
     "name": "WeHelp - Production (AWS EC2)",
     "values": [
-        {"key": "baseUrl", "value": "http://3.111.29.126", "type": "default", "enabled": True},
+        {"key": "baseUrl", "value": "http://3.110.92.188", "type": "default", "enabled": True},
         {"key": "admin_username", "value": "admin", "type": "default", "enabled": True},
         {"key": "admin_password", "value": "admin123", "type": "secret", "enabled": True},
         {"key": "agent_username", "value": "agent_rahul", "type": "default", "enabled": True},
