@@ -1,0 +1,439 @@
+/* ==========================================================================
+   WeHelp Django Admin - Light & Simple Theme
+   Modern, crisp, high-contrast light theme with subtle slate surfaces & emerald accents
+   ========================================================================== */
+
+:root,
+html,
+html[data-theme="dark"],
+html[data-theme="light"],
+body {
+    --primary: #059669;
+    --primary-fg: #ffffff;
+    --secondary: #0f172a;
+    --accent: #10b981;
+    --body-bg: #f8fafc;
+    --body-fg: #1e293b;
+    --body-quiet-color: #64748b;
+    --body-loud-color: #0f172a;
+    --header-color: #0f172a;
+    --header-bg: #ffffff;
+    --header-link-color: #334155;
+    --breadcrumbs-bg: #ffffff;
+    --breadcrumbs-fg: #64748b;
+    --breadcrumbs-link-fg: #059669;
+    --link-fg: #059669;
+    --link-hover-color: #047857;
+    --link-selected-fg: #059669;
+    --hairline-color: #e2e8f0;
+    --border-color: #cbd5e1;
+    --darkened-bg: #f1f5f9;
+    --selected-bg: #ecfdf5;
+    --selected-row: #f0fdf4;
+    --button-bg: #f1f5f9;
+    --button-hover-bg: #e2e8f0;
+    --button-fg: #1e293b;
+    --default-button-bg: #059669;
+    --default-button-hover-bg: #047857;
+    --default-button-fg: #ffffff;
+    --close-button-bg: #94a3b8;
+    --close-button-hover-bg: #64748b;
+    --message-success-bg: #ecfdf5;
+    --message-warning-bg: #fffbeb;
+    --message-error-bg: #fef2f2;
+    --font-family-primary: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color-scheme: light !important;
+}
+
+/* Base Body & Layout */
+body {
+    background-color: #f8fafc !important;
+    color: #1e293b !important;
+    font-family: var(--font-family-primary);
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Top Header Bar */
+#header {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    padding: 12px 24px !important;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+}
+
+.wehelp-brand-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none !important;
+}
+
+.wehelp-brand-badge {
+    background: #059669;
+    color: #ffffff !important;
+    font-weight: 800;
+    font-size: 15px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    letter-spacing: 0.5px;
+}
+
+.wehelp-brand-title {
+    color: #0f172a !important;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: -0.2px;
+}
+
+#user-tools {
+    color: #475569 !important;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+#user-tools a {
+    color: #059669 !important;
+    border-bottom: none !important;
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: background-color 0.15s ease;
+}
+
+#user-tools a:hover {
+    background: #f1f5f9;
+    color: #047857 !important;
+}
+
+/* Breadcrumbs */
+div.breadcrumbs {
+    background: #ffffff !important;
+    color: #64748b !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    padding: 10px 24px !important;
+    font-size: 13px;
+}
+
+div.breadcrumbs a {
+    color: #059669 !important;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+div.breadcrumbs a:hover {
+    text-decoration: underline;
+}
+
+/* Main Container & Modules */
+#content {
+    padding: 24px !important;
+    background: #f8fafc !important;
+}
+
+.module {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 10px !important;
+    margin-bottom: 20px !important;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+    overflow: hidden;
+}
+
+.module caption,
+.module h2 {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    padding: 12px 18px !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.module caption a {
+    color: #0f172a !important;
+}
+
+/* Dashboard App Sections */
+.app-accounts, .app-attendance, .app-donations, .app-leaves, .app-tracking {
+    border-left: 4px solid #059669 !important;
+}
+
+/* Tables & Data Grid */
+#changelist {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 10px !important;
+    padding: 16px !important;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+}
+
+table {
+    width: 100%;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+    border-radius: 8px !important;
+    overflow: hidden;
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+}
+
+thead th {
+    background: #f1f5f9 !important;
+    color: #475569 !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    padding: 10px 14px !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+}
+
+thead th a {
+    color: #334155 !important;
+}
+
+tbody tr {
+    background: #ffffff !important;
+    transition: background 0.15s ease;
+}
+
+tbody tr:nth-child(even) {
+    background: #f8fafc !important;
+}
+
+tbody tr:hover {
+    background: #f0fdf4 !important;
+}
+
+tbody td, tbody th {
+    padding: 10px 14px !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+    color: #334155 !important;
+    font-size: 13px !important;
+}
+
+tbody tr.selected {
+    background: #ecfdf5 !important;
+}
+
+/* Action Bars & Search Filter */
+#toolbar {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 8px !important;
+    padding: 10px 14px !important;
+    margin-bottom: 16px !important;
+}
+
+#changelist-filter {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 8px !important;
+    padding: 14px !important;
+}
+
+#changelist-filter h2 {
+    background: transparent !important;
+    color: #0f172a !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    padding-bottom: 8px !important;
+}
+
+#changelist-filter h3 {
+    color: #64748b !important;
+    font-size: 11px !important;
+    text-transform: uppercase;
+    font-weight: 700;
+}
+
+#changelist-filter a {
+    color: #334155 !important;
+    font-size: 12px;
+}
+
+#changelist-filter li.selected a {
+    color: #059669 !important;
+    font-weight: 700;
+}
+
+/* Form Inputs, Selects & Buttons */
+input[type="text"],
+input[type="password"],
+input[type="email"],
+input[type="url"],
+input[type="number"],
+input[type="date"],
+input[type="datetime-local"],
+textarea,
+select {
+    background: #ffffff !important;
+    color: #1e293b !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 6px !important;
+    padding: 8px 12px !important;
+    font-size: 13px !important;
+    box-shadow: none !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus,
+textarea:focus,
+select:focus {
+    border-color: #059669 !important;
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.15) !important;
+}
+
+/* Buttons */
+.button,
+input[type="submit"],
+input[type="button"],
+.submit-row input {
+    background: #f1f5f9 !important;
+    color: #1e293b !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 6px !important;
+    padding: 8px 16px !important;
+    font-weight: 600 !important;
+    font-size: 13px !important;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.button:hover,
+input[type="submit"]:hover {
+    background: #e2e8f0 !important;
+}
+
+.button.default,
+input[type="submit"].default,
+.submit-row input.default {
+    background: #059669 !important;
+    color: #ffffff !important;
+    border: 1px solid #047857 !important;
+    box-shadow: 0 1px 2px 0 rgba(5, 150, 105, 0.2);
+}
+
+.button.default:hover,
+input[type="submit"].default:hover,
+.submit-row input.default:hover {
+    background: #047857 !important;
+    border-color: #065f46 !important;
+}
+
+.button.deletelink,
+a.deletelink {
+    background: #fee2e2 !important;
+    color: #dc2626 !important;
+    border: 1px solid #fca5a5 !important;
+    border-radius: 6px !important;
+    padding: 8px 14px !important;
+    font-weight: 600 !important;
+}
+
+.button.deletelink:hover,
+a.deletelink:hover {
+    background: #fecaca !important;
+}
+
+/* Messages & Alerts */
+ul.messagelist li {
+    border-radius: 8px !important;
+    padding: 12px 18px !important;
+    margin-bottom: 12px !important;
+    font-size: 13px !important;
+    font-weight: 500;
+}
+
+ul.messagelist li.success {
+    background: #ecfdf5 !important;
+    color: #065f46 !important;
+    border: 1px solid #a7f3d0 !important;
+}
+
+ul.messagelist li.warning {
+    background: #fffbeb !important;
+    color: #92400e !important;
+    border: 1px solid #fde68a !important;
+}
+
+ul.messagelist li.error {
+    background: #fef2f2 !important;
+    color: #991b1b !important;
+    border: 1px solid #fecaca !important;
+}
+
+/* Fieldsets & Forms */
+fieldset {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 8px !important;
+    padding: 16px 20px !important;
+    margin-bottom: 16px !important;
+}
+
+fieldset h2 {
+    background: transparent !important;
+    color: #0f172a !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    padding-bottom: 8px !important;
+    margin-bottom: 14px !important;
+}
+
+.form-row {
+    border-bottom: 1px solid #f1f5f9 !important;
+    padding: 12px 0 !important;
+}
+
+.submit-row {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 8px !important;
+    padding: 14px !important;
+}
+
+/* Clean Custom Status Badges */
+span.status-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+}
+
+span.status-badge.approved,
+span.status-badge.verified,
+span.status-badge.present {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+span.status-badge.pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+span.status-badge.rejected,
+span.status-badge.absent {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+/* Pagination */
+.paginator {
+    background: #ffffff !important;
+    color: #64748b !important;
+    border-top: 1px solid #e2e8f0 !important;
+    padding: 12px !important;
+    font-size: 12px !important;
+}

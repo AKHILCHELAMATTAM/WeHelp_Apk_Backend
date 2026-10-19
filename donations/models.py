@@ -206,6 +206,13 @@ class BankDetail(models.Model):
         null=True,
         help_text="Branch name and city",
     )
+    account_type = models.CharField(
+        max_length=50,
+        default="Current Account",
+        blank=True,
+        null=True,
+        help_text="Account type (e.g. Current Account, Savings Account)",
+    )
     is_active = models.BooleanField(
         default=True,
         help_text="Whether this bank account is currently active for donations",

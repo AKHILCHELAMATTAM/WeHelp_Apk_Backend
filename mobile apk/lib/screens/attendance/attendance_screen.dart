@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:geolocator/geolocator.dart';
 import '../../core/api/api_client.dart';
 import '../../core/api/api_constants.dart';
 import '../../core/services/location_service.dart';
@@ -169,12 +170,19 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
       builder: (ctx) => AlertDialog(
         title: const Text('Location Required'),
         content: const Text(
-          'Please enable Location Services (GPS) and grant permission to mark your attendance accurately.',
+          'Please enable Location Services (GPS) and grant permission so that your exact location and address can be recorded for attendance.',
         ),
         actions: [
-          ElevatedButton(
+          TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('OK'),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              await Geolocator.openLocationSettings();
+            },
+            child: const Text('Open GPS Settings'),
           ),
         ],
       ),

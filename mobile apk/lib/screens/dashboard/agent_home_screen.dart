@@ -203,30 +203,90 @@ class _AgentHomeScreenState extends State<AgentHomeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Live Tracking Active Banner (Requirement #2 & #3)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: BoxDecoration(
-                color: const Color(0xFFDEF7EC),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFF84E1BC)),
-              ),
-              child: const Row(
-                children: [
-                  Icon(Icons.gps_fixed_rounded, color: Color(0xFF03543F), size: 18),
-                  SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      'Live GPS Tracking Active • Admin Connected',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF03543F),
-                      ),
-                    ),
+            // Live Tracking Active Banner with Real Address Display (Requirement #2 & #3)
+            ValueListenableBuilder<LocationResult?>(
+              valueListenable: LocationService.currentLocationNotifier,
+              builder: (context, loc, _) {
+                final hasLoc = loc != null;
+                return Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFDEF7EC),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: const Color(0xFF84E1BC)),
                   ),
-                ],
-              ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: const BoxDecoration(
+                              color: Color(0xFF0E9F6E),
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          const Expanded(
+                            child: Text(
+                              'Live GPS Tracking Active • Admin Connected',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF03543F),
+                              ),
+                            ),
+                          ),
+                          InkWell(
+                            onTap: () async {
+                              final updated = await LocationService.getCurrentLocation(forceRefresh: true);
+                              if (updated != null) {
+                                await LocationService.sendLiveLocationPing();
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('📍 Live location updated and sent to admin!'),
+                                      duration: Duration(seconds: 2),
+                                    ),
+                                  );
+                                }
+                              }
+                            },
+                            child: const Padding(
+                              padding: EdgeInsets.all(4),
+                              child: Icon(Icons.refresh_rounded, size: 16, color: Color(0xFF03543F)),
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (hasLoc) ...[
+                        const SizedBox(height: 6),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Icon(Icons.location_on_rounded, size: 14, color: Color(0xFF046C4E)),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                loc.address,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF046C4E),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ],
+                  ),
+                );
+              },
             ),
             const SizedBox(height: 16),
 

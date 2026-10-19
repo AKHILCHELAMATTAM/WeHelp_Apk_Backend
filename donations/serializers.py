@@ -216,6 +216,7 @@ class BankDetailSerializer(serializers.ModelSerializer):
             "bank_name",
             "account_number",
             "ifsc_code",
+            "account_type",
             "upi_id",
             "branch_name",
             "is_active",

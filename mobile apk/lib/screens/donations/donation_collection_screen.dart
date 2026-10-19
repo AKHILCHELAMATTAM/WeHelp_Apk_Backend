@@ -292,29 +292,33 @@ class _DonationCollectionScreenState extends State<DonationCollectionScreen> wit
                 'Account Holder',
                 _bankDetails!.accountHolderName,
               ),
-              if (_bankDetails!.bankName != null && _bankDetails!.bankName!.isNotEmpty) ...[
-                const SizedBox(height: 10),
-                _bankDetailRow('Bank Name', _bankDetails!.bankName!),
-              ],
               const SizedBox(height: 10),
-              // Clearly labeled Account Number with Copy Button (Requirement #3)
+              _bankDetailRow('Bank Name', _bankDetails!.bankName),
+              const SizedBox(height: 10),
+              // Clearly labeled Account Number with Copy Button
               _bankDetailRowWithCopy(
                 'Account Number',
-                _bankDetails!.accountNumber!,
+                _bankDetails!.accountNumber,
                 copyLabel: 'Account number',
               ),
-              if (_bankDetails!.ifscCode != null && _bankDetails!.ifscCode!.isNotEmpty) ...[
-                const SizedBox(height: 10),
-                _bankDetailRowWithCopy(
-                  'IFSC Code',
-                  _bankDetails!.ifscCode!,
-                  copyLabel: 'IFSC Code',
-                ),
-              ],
+              const SizedBox(height: 10),
+              _bankDetailRow('Account Type', _bankDetails!.accountType),
+              const SizedBox(height: 10),
+              _bankDetailRowWithCopy(
+                'IFSC Code',
+                _bankDetails!.ifscCode,
+                copyLabel: 'IFSC Code',
+              ),
               if (_bankDetails!.branchName != null && _bankDetails!.branchName!.isNotEmpty) ...[
                 const SizedBox(height: 10),
                 _bankDetailRow('Branch', _bankDetails!.branchName!),
               ],
+              const SizedBox(height: 10),
+              _bankDetailRowWithCopy(
+                'UPI ID / VPA',
+                _bankDetails!.upiId,
+                copyLabel: 'UPI ID',
+              ),
             ] else ...[
               // Graceful fallback when details not yet supplied by admin
               Container(
@@ -530,6 +534,49 @@ class _DonationCollectionScreenState extends State<DonationCollectionScreen> wit
                           Text(
                             'Amount: ₹${_amountController.text}',
                             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppTheme.primary),
+                          ),
+                          const SizedBox(height: 12),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF1F5F9),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: const Color(0xFFCBD5E1)),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.account_balance_rounded, size: 16, color: AppTheme.secondary),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'A/C: ${_bankDetails?.accountNumber ?? "84278100000006"}',
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 0.5,
+                                    color: AppTheme.secondary,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                InkWell(
+                                  onTap: () {
+                                    Clipboard.setData(ClipboardData(
+                                      text: _bankDetails?.accountNumber ?? "84278100000006",
+                                    ));
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('Bank Account Number copied!'),
+                                        duration: Duration(seconds: 2),
+                                      ),
+                                    );
+                                  },
+                                  child: const Padding(
+                                    padding: EdgeInsets.all(2),
+                                    child: Icon(Icons.copy_rounded, size: 16, color: AppTheme.primary),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ],
                       ),

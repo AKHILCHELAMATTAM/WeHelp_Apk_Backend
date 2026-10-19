@@ -410,11 +410,12 @@ class AgentBankDetailView(APIView):
             return Response(
                 {
                     "account_holder_name": "WeHelp Foundation",
-                    "bank_name": None,
-                    "account_number": None,
-                    "ifsc_code": None,
+                    "bank_name": "Bank of Baroda",
+                    "account_number": "84278100000006",
+                    "ifsc_code": "BARB0VJIDUK",
+                    "account_type": "Current Account",
                     "upi_id": "wehelp.donations@upi",
-                    "branch_name": None,
+                    "branch_name": "Main Branch",
                     "is_active": True,
                 }
             )
@@ -438,7 +439,12 @@ class AdminBankDetailView(APIView):
         if not bank_detail:
             bank_detail = BankDetail.objects.create(
                 account_holder_name="WeHelp Foundation",
+                bank_name="Bank of Baroda",
+                account_number="84278100000006",
+                ifsc_code="BARB0VJIDUK",
+                account_type="Current Account",
                 upi_id="wehelp.donations@upi",
+                branch_name="Main Branch",
                 is_active=True,
             )
         serializer = BankDetailSerializer(bank_detail)

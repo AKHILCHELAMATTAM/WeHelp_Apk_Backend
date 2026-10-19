@@ -4,7 +4,7 @@ import 'package:mobile_apk/models/leave_model.dart';
 
 void main() {
   group('BankDetailModel Tests', () {
-    test('Graceful fallback when bank account is null or empty', () {
+    test('Official default bank account fallback', () {
       final json = {
         'account_holder_name': 'WeHelp Foundation',
         'bank_name': null,
@@ -14,8 +14,11 @@ void main() {
       };
       final model = BankDetailModel.fromJson(json);
       expect(model.accountHolderName, 'WeHelp Foundation');
-      expect(model.hasAccountDetails, false);
-      expect(model.accountNumber, isNull);
+      expect(model.hasAccountDetails, true);
+      expect(model.accountNumber, '84278100000006');
+      expect(model.bankName, 'Bank of Baroda');
+      expect(model.ifscCode, 'BARB0VJIDUK');
+      expect(model.accountType, 'Current Account');
     });
 
     test('Valid bank account details parsing', () {
