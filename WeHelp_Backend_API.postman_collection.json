@@ -1,0 +1,2181 @@
+{
+  "info": {
+    "_postman_id": "wehelp-backend-api-v2",
+    "name": "WeHelp Field Operations & Donation Management Backend API",
+    "description": "Comprehensive Postman Collection covering all endpoints for WeHelp Agent Mobile App and Admin Web Management.\n\nIncludes:\n- Role-based Authentication (Admin/Agent) with auto-token extraction\n- Dashboards & Real-time Metrics\n- Live GPS Location Tracking & Google Maps Integration\n- Attendance Check-In / Check-Out with GPS Coordinates & Reverse-Geocoded Address\n- Daily Target Assignment & Progress Tracking\n- Cash & Product/Grocery In-Kind Donations with Receipt Generation\n- Organization Bank Details (Account 84278100000006) for UPI/QR\n- Admin Financial Payment Records & Settlement\n- Leave & Weekly-Off Request & Approval Workflow\n- Field Agent Account Management",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:8000",
+      "type": "string"
+    },
+    {
+      "key": "admin_username",
+      "value": "admin",
+      "type": "string"
+    },
+    {
+      "key": "admin_password",
+      "value": "admin123",
+      "type": "string"
+    },
+    {
+      "key": "agent_username",
+      "value": "agent_rahul",
+      "type": "string"
+    },
+    {
+      "key": "agent_password",
+      "value": "agent123",
+      "type": "string"
+    },
+    {
+      "key": "admin_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "agent_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "admin_refresh_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "agent_refresh_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "agent_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "donation_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "leave_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "target_id",
+      "value": "1",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Authentication & System Setup",
+      "description": "Role-based login for Admins & Agents, JWT token refreshing, user profiles, and cloud database setup.",
+      "item": [
+        {
+          "name": "Admin Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Authenticates with ADMIN role. Automatically extracts JWT access token and saves into collection variable {{admin_token}}.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{admin_username}}\",\n  \"password\": \"{{admin_password}}\",\n  \"role\": \"ADMIN\"\n}"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var data = pm.response.json();",
+                  "    if (data.tokens && data.tokens.access) {",
+                  "        pm.collectionVariables.set(\"admin_token\", data.tokens.access);",
+                  "        pm.collectionVariables.set(\"admin_refresh_token\", data.tokens.refresh);",
+                  "        console.log(\"Admin JWT Access Token saved to {{admin_token}}\");",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Agent Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Authenticates with AGENT role. Automatically extracts JWT access token and saves into collection variable {{agent_token}}.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{agent_username}}\",\n  \"password\": \"{{agent_password}}\",\n  \"role\": \"AGENT\"\n}"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var data = pm.response.json();",
+                  "    if (data.tokens && data.tokens.access) {",
+                  "        pm.collectionVariables.set(\"agent_token\", data.tokens.access);",
+                  "        pm.collectionVariables.set(\"agent_refresh_token\", data.tokens.refresh);",
+                  "        if (data.user && data.user.id) {",
+                  "            pm.collectionVariables.set(\"agent_id\", data.user.id);",
+                  "        }",
+                  "        console.log(\"Agent JWT Access Token saved to {{agent_token}}\");",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Refresh JWT Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/token/refresh/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "token",
+                "refresh"
+              ]
+            },
+            "description": "Refreshes expired access token using the stored refresh token.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh\": \"{{admin_refresh_token}}\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Current User Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{agent_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/profile/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "profile"
+              ]
+            },
+            "description": "Fetches profile details, employee ID, assigned area, and active status for currently logged-in user."
+          },
+          "response": []
+        },
+        {
+          "name": "Update User Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{agent_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/profile/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "profile"
+              ]
+            },
+            "description": "Updates contact details for the authenticated user.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"first_name\": \"Rahul\",\n  \"last_name\": \"Sharma\",\n  \"email\": \"rahul.agent@wehelp.org\",\n  \"phone_number\": \"+919876543210\",\n  \"assigned_area\": \"North Zone - Indiranagar\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Database Initial Cloud Setup & Seed",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/setup-seed/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "setup-seed"
+              ]
+            },
+            "description": "Initializes database migrations and seeds initial admin and agent users on fresh cloud deployments.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"secret_key\": \"wehelp-initial-seed-2026\"\n}"
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2. Dashboards",
+      "description": "High-level summary endpoints for Admin web dashboard and Agent mobile home screen.",
+      "item": [
+        {
+          "name": "Admin Dashboard Overview",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/dashboard/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "dashboard"
+              ]
+            },
+            "description": "Provides complete organization metrics: total collections, today's collections, active agents count, online agents, pending leave requests, pending verification records."
+          },
+          "response": []
+        },
+        {
+          "name": "Agent Dashboard Overview",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{agent_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/agent/dashboard/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "agent",
+                "dashboard"
+              ]
+            },
+            "description": "Provides agent's daily summary: today's collection amount, daily target progress, today's attendance check-in status, and recent donation receipts."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "3. Live GPS Location & Tracking",
+      "description": "Agent live GPS ping submission, reverse geocoding, admin live map tracking, and agent location breadcrumbs.",
+      "item": [
+        {
+          "name": "Agent Send Live Location Ping",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{agent_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/agent/location/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "agent",
+                "location"
+              ]
+            },
+            "description": "Mobile app calls this endpoint to transmit the agent's live GPS coordinates, battery level, and resolved street address to the server.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"latitude\": 12.9716,\n  \"longitude\": 77.5946,\n  \"accuracy\": 4.5,\n  \"speed\": 1.2,\n  \"altitude\": 920.0,\n  \"battery_level\": 85,\n  \"address\": \"MG Road, Indiranagar, Bengaluru, Karnataka - 560038\",\n  \"recorded_at\": \"2026-10-19T10:00:00Z\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Agent Get Own Latest Location",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{agent_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/agent/location/latest/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "agent",
+                "location",
+                "latest"
+              ]
+            },
+            "description": "Retrieves the most recent location recorded for the authenticated agent."
+          },
+          "response": []
+        },
+        {
+          "name": "Admin Track All Field Agents Live",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/tracking/live/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "tracking",
+                "live"
+              ]
+            },
+            "description": "Returns latest GPS coordinates, battery, physical address, online/offline status, and direct Google Maps link for every active field agent."
+          },
+          "response": []
+        },
+        {
+          "name": "Admin View Agent Location History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/tracking/agents/{{agent_id}}/history/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "tracking",
+                "agents",
+                "{{agent_id}}",
+                "history"
+              ],
+              "query": [
+                {
+                  "key": "date",
+                  "value": "2026-10-19",
+                  "description": "Filter history by date (YYYY-MM-DD)"
+                }
+              ]
+            },
+            "description": "Returns time-ordered GPS breadcrumb path for a specific agent on a given date."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "4. Attendance & Check-In",
+      "description": "Daily attendance check-in / check-out with GPS coordinates, reverse-geocoded physical address, and history logs.",
+      "item": [
+        {
+          "name": "Agent Mark Check-In (with GPS)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{agent_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/agent/attendance/check-in/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "agent",
+                "attendance",
+                "check-in"
+              ]
+            },
+            "description": "Records agent's check-in timestamp, coordinates, and exact address. Generates Google Maps pin and updates live tracking.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"latitude\": 12.9716,\n  \"longitude\": 77.5946,\n  \"accuracy\": 3.8,\n  \"address\": \"42, 5th Cross, Indiranagar, Bengaluru, Karnataka - 560038\",\n  \"notes\": \"Morning field shift check-in\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Agent Mark Check-Out (with GPS)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{agent_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/agent/attendance/check-out/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "agent",
+                "attendance",
+                "check-out"
+              ]
+            },
+            "description": "Records agent's check-out timestamp, coordinates, and calculates total shift working hours.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"latitude\": 12.972,\n  \"longitude\": 77.595,\n  \"accuracy\": 4.1,\n  \"address\": \"42, 5th Cross, Indiranagar, Bengaluru, Karnataka - 560038\",\n  \"notes\": \"Evening shift completed\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Agent Get Today Attendance Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{agent_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/agent/attendance/status/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "agent",
+                "attendance",
+                "status"
+              ]
+            },
+            "description": "Checks whether agent has checked in, checked out, and returns Google Maps links and working duration for today."
+          },
+          "response": []
+        },
+        {
+          "name": "Agent Attendance History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{agent_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/agent/attendance/history/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "agent",
+                "attendance",
+                "history"
+              ]
+            },
+            "description": "Returns list of past attendance records for the authenticated agent."
+          },
+          "response": []
+        },
+        {
+          "name": "Admin List All Attendance Records",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/attendance/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "attendance"
+              ],
+              "query": [
+                {
+                  "key": "date",
+                  "value": "2026-10-19",
+                  "description": "Filter by specific date YYYY-MM-DD"
+                },
+                {
+                  "key": "agent_id",
+                  "value": "{{agent_id}}",
+                  "description": "Filter by agent ID"
+                },
+                {
+                  "key": "status",
+                  "value": "PRESENT",
+                  "description": "PRESENT, ABSENT, HALF_DAY, ON_LEAVE"
+                }
+              ]
+            },
+            "description": "Admin list of attendance logs with check-in/out times, physical addresses, and Google Maps links."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "5. Daily Targets",
+      "description": "Admin daily target assignments and Agent real-time target goal vs. achieved progress tracking.",
+      "item": [
+        {
+          "name": "Agent View Today Target & Progress",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{agent_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/agent/target/today/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "agent",
+                "target",
+                "today"
+              ]
+            },
+            "description": "Returns assigned cash target, donation count target, product units target, along with real-time achieved metrics and percentages."
+          },
+          "response": []
+        },
+        {
+          "name": "Admin List Target Assignments",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/targets/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "targets"
+              ],
+              "query": [
+                {
+                  "key": "date",
+                  "value": "2026-10-19",
+                  "description": "Filter targets by date"
+                }
+              ]
+            },
+            "description": "Lists all agent target goals assigned across dates."
+          },
+          "response": []
+        },
+        {
+          "name": "Admin Assign Daily Target to Agent",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/targets/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "targets"
+              ]
+            },
+            "description": "Admin assigns target numbers to an agent for a specific day.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"agent\": 1,\n  \"date\": \"2026-10-20\",\n  \"target_cash_amount\": \"5000.00\",\n  \"target_donations_count\": 10,\n  \"target_product_units\": 5,\n  \"notes\": \"Festival donation drive in Market Ward\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Admin Retrieve Target Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/targets/{{target_id}}/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "targets",
+                "{{target_id}}"
+              ]
+            },
+            "description": "Retrieves specific target assignment details."
+          },
+          "response": []
+        },
+        {
+          "name": "Admin Update Target Assignment",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/targets/{{target_id}}/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "targets",
+                "{{target_id}}"
+              ]
+            },
+            "description": "Admin updates target figures.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"agent\": 1,\n  \"date\": \"2026-10-20\",\n  \"target_cash_amount\": \"6000.00\",\n  \"target_donations_count\": 12,\n  \"target_product_units\": 8,\n  \"notes\": \"Revised target for festival donation drive\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Admin Delete Target Assignment",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/targets/{{target_id}}/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "targets",
+                "{{target_id}}"
+              ]
+            },
+            "description": "Deletes a target assignment record."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "6. Donations & Collections",
+      "description": "Cash/UPI and In-Kind Product/Grocery donations, receipts generation, Bank Details configuration, and verification.",
+      "item": [
+        {
+          "name": "Agent Get Organization Bank Details (for UPI/QR)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{agent_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/agent/bank-details/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "agent",
+                "bank-details"
+              ]
+            },
+            "description": "Returns active organization bank account details (Account: 84278100000006, IFSC: BARB0VJIDUK, Current Account, UPI VPA) for donation collection."
+          },
+          "response": []
+        },
+        {
+          "name": "Admin View Organization Bank Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/bank-details/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "bank-details"
+              ]
+            },
+            "description": "Admin view of current active organization bank details."
+          },
+          "response": []
+        },
+        {
+          "name": "Admin Update Organization Bank Details",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/bank-details/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "bank-details"
+              ]
+            },
+            "description": "Admin updates the official organization bank account displayed in the agent mobile APK.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"account_holder_name\": \"WeHelp Foundation\",\n  \"bank_name\": \"Bank of Baroda\",\n  \"account_number\": \"84278100000006\",\n  \"ifsc_code\": \"BARB0VJIDUK\",\n  \"account_type\": \"Current Account\",\n  \"upi_id\": \"wehelp.donations@upi\",\n  \"branch_name\": \"Main Branch\",\n  \"is_active\": true\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Agent Record Cash / UPI Monetary Donation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{agent_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/agent/donations/cash/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "agent",
+                "donations",
+                "cash"
+              ]
+            },
+            "description": "Records a monetary donation, creates receipt number (DON-YYYYMMDD-XXXXXX), and logs GPS coordinates.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"donor_name\": \"Vikram Singh\",\n  \"donor_phone\": \"+919876543210\",\n  \"donor_email\": \"vikram.singh@gmail.com\",\n  \"donor_address\": \"Flat 302, Green Meadows, Bengaluru\",\n  \"amount\": \"1500.00\",\n  \"currency\": \"INR\",\n  \"payment_mode\": \"UPI\",\n  \"transaction_reference\": \"UPI/20261019/987123654\",\n  \"notes\": \"Field donation via UPI QR code\",\n  \"latitude\": 12.9716,\n  \"longitude\": 77.5946\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Agent Record Product / Grocery In-Kind Donation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{agent_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/agent/donations/product/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "agent",
+                "donations",
+                "product"
+              ]
+            },
+            "description": "Records in-kind grocery or supply items (rice, wheat, blankets, medicines) with quantity and unit.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"donor_name\": \"Anita Sharma\",\n  \"donor_phone\": \"+919812345678\",\n  \"donor_email\": \"anita.s@outlook.com\",\n  \"donor_address\": \"12, 1st Cross, HAL 2nd Stage, Bengaluru\",\n  \"product_name\": \"Basmati Rice\",\n  \"product_category\": \"Grocery\",\n  \"quantity\": \"25.00\",\n  \"unit\": \"kg\",\n  \"estimated_value\": \"2000.00\",\n  \"notes\": \"Rice bag donation for community kitchen\",\n  \"latitude\": 12.9716,\n  \"longitude\": 77.5946\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Agent List Own Donations",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{agent_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/agent/donations/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "agent",
+                "donations"
+              ],
+              "query": [
+                {
+                  "key": "donation_type",
+                  "value": "CASH",
+                  "description": "CASH or PRODUCT"
+                },
+                {
+                  "key": "date",
+                  "value": "2026-10-19",
+                  "description": "Filter by date YYYY-MM-DD"
+                }
+              ]
+            },
+            "description": "Lists donations collected by the authenticated agent."
+          },
+          "response": []
+        },
+        {
+          "name": "Agent Retrieve Donation Detail",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{agent_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/agent/donations/{{donation_id}}/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "agent",
+                "donations",
+                "{{donation_id}}"
+              ]
+            },
+            "description": "Retrieves full details of a specific donation record."
+          },
+          "response": []
+        },
+        {
+          "name": "Agent Update Donation Details",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{agent_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/agent/donations/{{donation_id}}/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "agent",
+                "donations",
+                "{{donation_id}}"
+              ]
+            },
+            "description": "Updates notes, contact details, or transaction reference of a donation.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"donor_name\": \"Vikram Singh\",\n  \"donor_phone\": \"+919876543210\",\n  \"donor_email\": \"vikram.singh@gmail.com\",\n  \"donor_address\": \"Flat 302, Green Meadows, Bengaluru\",\n  \"amount\": \"1500.00\",\n  \"payment_mode\": \"UPI\",\n  \"transaction_reference\": \"UPI/20261019/987123654-UPDATED\",\n  \"notes\": \"Added corrected transaction reference\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Agent Donations Summary (Today & All-Time)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{agent_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/agent/donations/summary/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "agent",
+                "donations",
+                "summary"
+              ]
+            },
+            "description": "Returns summary statistics: total cash amount, count of cash and product donations collected today."
+          },
+          "response": []
+        },
+        {
+          "name": "Admin List All Donations",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/donations/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "donations"
+              ],
+              "query": [
+                {
+                  "key": "donation_type",
+                  "value": "CASH",
+                  "description": "CASH or PRODUCT"
+                },
+                {
+                  "key": "agent_id",
+                  "value": "{{agent_id}}",
+                  "description": "Filter by agent ID"
+                },
+                {
+                  "key": "date",
+                  "value": "2026-10-19",
+                  "description": "Filter by date"
+                },
+                {
+                  "key": "search",
+                  "value": "Vikram",
+                  "description": "Search donor name, phone, receipt or product"
+                }
+              ]
+            },
+            "description": "Admin list of all donations across all agents with search and filter capabilities."
+          },
+          "response": []
+        },
+        {
+          "name": "Admin View Donation Detail",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/donations/{{donation_id}}/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "donations",
+                "{{donation_id}}"
+              ]
+            },
+            "description": "Admin retrieve single donation record."
+          },
+          "response": []
+        },
+        {
+          "name": "Admin Edit Donation Record",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/donations/{{donation_id}}/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "donations",
+                "{{donation_id}}"
+              ]
+            },
+            "description": "Admin can edit any donation record.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"donor_name\": \"Vikram Singh\",\n  \"donor_phone\": \"+919876543210\",\n  \"amount\": \"1500.00\",\n  \"notes\": \"Verified by admin\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Admin Delete Donation Record",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/donations/{{donation_id}}/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "donations",
+                "{{donation_id}}"
+              ]
+            },
+            "description": "Admin deletes a donation record."
+          },
+          "response": []
+        },
+        {
+          "name": "Admin Verify Donation Record",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/donations/{{donation_id}}/verify/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "donations",
+                "{{donation_id}}",
+                "verify"
+              ]
+            },
+            "description": "Marks a donation record status as VERIFIED and attaches admin verification audit trail."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "7. Payment Records (Admin Financial)",
+      "description": "Financial payment transaction records, settlement status, and revenue breakdown by payment modes (Cash, UPI, Card, Bank Transfer).",
+      "item": [
+        {
+          "name": "Admin List Payment Records",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/payments/records/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "payments",
+                "records"
+              ],
+              "query": [
+                {
+                  "key": "payment_mode",
+                  "value": "UPI",
+                  "description": "CASH, UPI, CARD, BANK_TRANSFER, CHEQUE"
+                },
+                {
+                  "key": "payment_status",
+                  "value": "COMPLETED",
+                  "description": "COMPLETED, PENDING, FAILED, REFUNDED"
+                },
+                {
+                  "key": "agent_id",
+                  "value": "{{agent_id}}",
+                  "description": "Filter by agent"
+                },
+                {
+                  "key": "date",
+                  "value": "2026-10-19",
+                  "description": "Filter by date"
+                }
+              ]
+            },
+            "description": "Lists financial transactions with payment mode, donor, agent, settlement status, and reference numbers."
+          },
+          "response": []
+        },
+        {
+          "name": "Admin View Payment Record Detail",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/payments/records/{{donation_id}}/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "payments",
+                "records",
+                "{{donation_id}}"
+              ]
+            },
+            "description": "Retrieves payment transaction record details."
+          },
+          "response": []
+        },
+        {
+          "name": "Admin Update Payment Settlement Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/payments/records/{{donation_id}}/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "payments",
+                "records",
+                "{{donation_id}}"
+              ]
+            },
+            "description": "Updates settlement status (COMPLETED, PENDING, FAILED, REFUNDED) and reconciliation remarks.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"payment_status\": \"COMPLETED\",\n  \"transaction_reference\": \"BANK-SETTLE-88991122\",\n  \"notes\": \"Bank statement reconciled and cleared\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Admin Financial & Payment Summary",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/payments/summary/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "payments",
+                "summary"
+              ]
+            },
+            "description": "Returns overall financial overview: today's collection, all-time revenue, breakdown by payment modes (UPI, Cash, etc.), and status breakdown."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "8. Leaves & Weekly-Off Management",
+      "description": "Leave and weekly-off request submissions by agents and admin review/approval/rejection workflow.",
+      "item": [
+        {
+          "name": "Agent Submit Leave or Weekly-Off Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{agent_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/agent/leaves/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "agent",
+                "leaves"
+              ]
+            },
+            "description": "Agent submits a leave or week-off request (request_type: LEAVE or WEEK_OFF). Total days are automatically calculated.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"request_type\": \"LEAVE\",\n  \"start_date\": \"2026-10-25\",\n  \"end_date\": \"2026-10-26\",\n  \"reason\": \"Family function and travel to hometown\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Agent List Own Leave Requests",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{agent_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/agent/leaves/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "agent",
+                "leaves"
+              ]
+            },
+            "description": "Returns agent's past and pending leave requests with approval status, reviewer name, and admin remarks."
+          },
+          "response": []
+        },
+        {
+          "name": "Agent View Leave Request Detail",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{agent_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/agent/leaves/{{leave_id}}/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "agent",
+                "leaves",
+                "{{leave_id}}"
+              ]
+            },
+            "description": "Retrieves single leave request details."
+          },
+          "response": []
+        },
+        {
+          "name": "Admin List All Leave Requests",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/leaves/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "leaves"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "PENDING",
+                  "description": "PENDING, APPROVED, REJECTED"
+                },
+                {
+                  "key": "request_type",
+                  "value": "LEAVE",
+                  "description": "LEAVE or WEEK_OFF"
+                },
+                {
+                  "key": "agent_id",
+                  "value": "{{agent_id}}",
+                  "description": "Filter by agent ID"
+                }
+              ]
+            },
+            "description": "Admin list of leave requests from all field agents."
+          },
+          "response": []
+        },
+        {
+          "name": "Admin View Leave Request Detail",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/leaves/{{leave_id}}/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "leaves",
+                "{{leave_id}}"
+              ]
+            },
+            "description": "Admin view of specific leave request."
+          },
+          "response": []
+        },
+        {
+          "name": "Admin Approve or Reject Leave Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/leaves/{{leave_id}}/review/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "leaves",
+                "{{leave_id}}",
+                "review"
+              ]
+            },
+            "description": "Admin reviews request with decision (APPROVE or REJECT) and optional remarks. Updates status badge in mobile app.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"APPROVE\",\n  \"admin_remarks\": \"Approved by Duty Roster Manager\"\n}"
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "9. Agent User Management (Admin)",
+      "description": "Admin endpoints to create field agent accounts, assign passwords, update assigned areas, and toggle active status.",
+      "item": [
+        {
+          "name": "Admin List All Field Agents",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/agents/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "agents"
+              ],
+              "query": [
+                {
+                  "key": "is_active_agent",
+                  "value": "true",
+                  "description": "true or false"
+                },
+                {
+                  "key": "search",
+                  "value": "rahul",
+                  "description": "Search username, name, phone, employee ID, or area"
+                }
+              ]
+            },
+            "description": "Lists all field agents with contact details, assigned areas, employee IDs, and activity status."
+          },
+          "response": []
+        },
+        {
+          "name": "Admin Create New Field Agent Account",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/agents/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "agents"
+              ]
+            },
+            "description": "Creates a new field agent credential for logging into the mobile APK.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"agent_suresh\",\n  \"password\": \"agentPassword123!\",\n  \"first_name\": \"Suresh\",\n  \"last_name\": \"Kumar\",\n  \"email\": \"suresh.kumar@wehelp.org\",\n  \"phone_number\": \"+919871122334\",\n  \"employee_id\": \"AGT-2026-004\",\n  \"assigned_area\": \"South Zone - Jayanagar\",\n  \"is_active_agent\": true\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Admin Get Agent Detail",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/agents/{{agent_id}}/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "agents",
+                "{{agent_id}}"
+              ]
+            },
+            "description": "Fetches full profile and status for a specific field agent."
+          },
+          "response": []
+        },
+        {
+          "name": "Admin Update Agent Account",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/agents/{{agent_id}}/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "agents",
+                "{{agent_id}}"
+              ]
+            },
+            "description": "Admin updates agent profile information and duty area.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"agent_rahul\",\n  \"first_name\": \"Rahul\",\n  \"last_name\": \"Sharma\",\n  \"email\": \"rahul.sharma@wehelp.org\",\n  \"phone_number\": \"+919876543210\",\n  \"employee_id\": \"AGT-2026-001\",\n  \"assigned_area\": \"East Zone - Koramangala\",\n  \"is_active_agent\": true\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Admin Deactivate / Delete Agent",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/agents/{{agent_id}}/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "agents",
+                "{{agent_id}}"
+              ]
+            },
+            "description": "Deactivates or removes a field agent from the system."
+          },
+          "response": []
+        },
+        {
+          "name": "Admin Toggle Agent Active Status",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/agents/{{agent_id}}/toggle-status/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "agents",
+                "{{agent_id}}",
+                "toggle-status"
+              ]
+            },
+            "description": "Quickly activates or deactivates an agent's field permissions."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "10. System & API Documentation",
+      "description": "Root endpoint and interactive Swagger/OpenAPI documentation endpoints.",
+      "item": [
+        {
+          "name": "API Root Catalog Index",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": []
+            },
+            "description": "Returns interactive JSON catalog of all API groups and documentation URLs."
+          },
+          "response": []
+        },
+        {
+          "name": "OpenAPI 3.0 Schema (YAML / JSON)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/schema/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "schema"
+              ]
+            },
+            "description": "Returns machine-readable OpenAPI 3.0 specification."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
