@@ -231,35 +231,32 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: GestureDetector(
                       onTap: _handleAdminSecretTap,
                       child: Container(
-                        width: 90,
-                        height: 90,
+                        width: 96,
+                        height: 96,
                         decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [AppTheme.primary, AppTheme.primaryLight],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          borderRadius: BorderRadius.circular(26),
+                          borderRadius: BorderRadius.circular(24),
                           boxShadow: [
                             BoxShadow(
-                              color: AppTheme.primary.withValues(alpha: 0.3),
-                              blurRadius: 18,
+                              color: const Color(0xFF024B69).withValues(alpha: 0.35),
+                              blurRadius: 20,
                               offset: const Offset(0, 8),
                             ),
                           ],
                         ),
-                        child: const Icon(
-                          Icons.volunteer_activism_rounded,
-                          size: 46,
-                          color: Colors.white,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(24),
+                          child: Image.asset(
+                            'assets/images/app_logo.png',
+                            fit: BoxFit.cover,
+                          ),
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 18),
 
                   const Text(
-                    'WeHelp Foundation',
+                    'We Help',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 26,
@@ -268,12 +265,23 @@ class _LoginScreenState extends State<LoginScreen> {
                       letterSpacing: -0.5,
                     ),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 3),
+                  const Text(
+                    'Charity Society and Education',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Color(0xFF024B69),
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.8,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
                   const Text(
                     'Field Agent Portal',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: 12,
                       color: Color(0xFF64748B),
                       fontWeight: FontWeight.w500,
                     ),

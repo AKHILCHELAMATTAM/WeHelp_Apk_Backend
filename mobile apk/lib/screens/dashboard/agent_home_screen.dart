@@ -119,7 +119,15 @@ class _AgentHomeScreenState extends State<AgentHomeScreen> {
           ? AppBar(
               title: Row(
                 children: [
-                  const Icon(Icons.volunteer_activism_rounded, color: Colors.white, size: 24),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(6),
+                    child: Image.asset(
+                      'assets/images/app_logo.png',
+                      width: 28,
+                      height: 28,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
                   const SizedBox(width: 10),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
