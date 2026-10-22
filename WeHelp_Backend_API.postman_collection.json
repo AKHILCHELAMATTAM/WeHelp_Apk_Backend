@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "wehelp-backend-api-v2",
     "name": "WeHelp Field Operations & Donation Management Backend API",
-    "description": "Comprehensive Postman Collection covering all endpoints for WeHelp Agent Mobile App and Admin Web Management.\n\nIncludes:\n- Role-based Authentication (Admin/Agent) with auto-token extraction\n- Dashboards & Real-time Metrics\n- Live GPS Location Tracking & Google Maps Integration\n- Attendance Check-In / Check-Out with GPS Coordinates & Reverse-Geocoded Address\n- Daily Target Assignment & Progress Tracking\n- Cash & Product/Grocery In-Kind Donations with Receipt Generation\n- Organization Bank Details (Account 84278100000006) for UPI/QR\n- Admin Financial Payment Records & Settlement\n- Leave & Weekly-Off Request & Approval Workflow\n- Field Agent Account Management",
+    "description": "Comprehensive Postman Collection covering all endpoints for WeHelp Agent Mobile App and Admin Web Management.\n\nIncludes:\n- Role-based Authentication (Admin/Agent) with auto-token extraction\n- Dashboards & Real-time Metrics\n- Live GPS Location Tracking & Google Maps Integration\n- Attendance Check-In / Check-Out with GPS Coordinates & Reverse-Geocoded Address\n- Daily Target Assignment & Progress Tracking\n- Cash & Product/Grocery In-Kind Donations with Receipt Generation\n- Organization Bank Details (Account 3113201002320) for UPI/QR\n- Admin Financial Payment Records & Settlement\n- Leave & Weekly-Off Request & Approval Workflow\n- Field Agent Account Management",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -1001,7 +1001,7 @@
                 "bank-details"
               ]
             },
-            "description": "Returns active organization bank account details (Account: 84278100000006, IFSC: BARB0VJIDUK, Current Account, UPI VPA) for donation collection."
+            "description": "Returns active organization bank account details (Account: 3113201002320, IFSC: CNRB0003113, Canara Bank, UPI VPA: 3113201002320@cnrb) for donation collection."
           },
           "response": []
         },
@@ -1071,7 +1071,7 @@
             "description": "Admin updates the official organization bank account displayed in the agent mobile APK.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"account_holder_name\": \"WeHelp Foundation\",\n  \"bank_name\": \"Bank of Baroda\",\n  \"account_number\": \"84278100000006\",\n  \"ifsc_code\": \"BARB0VJIDUK\",\n  \"account_type\": \"Current Account\",\n  \"upi_id\": \"wehelp.donations@upi\",\n  \"branch_name\": \"Main Branch\",\n  \"is_active\": true\n}"
+              "raw": "{\n  \"account_holder_name\": \"WE HELP CHARITABLE SOCIETY AND EDUCATION\",\n  \"bank_name\": \"Canara Bank\",\n  \"account_number\": \"3113201002320\",\n  \"ifsc_code\": \"CNRB0003113\",\n  \"account_type\": \"Current Account\",\n  \"upi_id\": \"3113201002320@cnrb\",\n  \"branch_name\": \"Main Branch\",\n  \"is_active\": true\n}"
             }
           },
           "response": []

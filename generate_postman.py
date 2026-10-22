@@ -5,7 +5,7 @@ collection = {
     "info": {
         "_postman_id": "wehelp-backend-api-v2",
         "name": "WeHelp Field Operations & Donation Management Backend API",
-        "description": "Comprehensive Postman Collection covering all endpoints for WeHelp Agent Mobile App and Admin Web Management.\n\nIncludes:\n- Role-based Authentication (Admin/Agent) with auto-token extraction\n- Dashboards & Real-time Metrics\n- Live GPS Location Tracking & Google Maps Integration\n- Attendance Check-In / Check-Out with GPS Coordinates & Reverse-Geocoded Address\n- Daily Target Assignment & Progress Tracking\n- Cash & Product/Grocery In-Kind Donations with Receipt Generation\n- Organization Bank Details (Account 84278100000006) for UPI/QR\n- Admin Financial Payment Records & Settlement\n- Leave & Weekly-Off Request & Approval Workflow\n- Field Agent Account Management",
+        "description": "Comprehensive Postman Collection covering all endpoints for WeHelp Agent Mobile App and Admin Web Management.\n\nIncludes:\n- Role-based Authentication (Admin/Agent) with auto-token extraction\n- Dashboards & Real-time Metrics\n- Live GPS Location Tracking & Google Maps Integration\n- Attendance Check-In / Check-Out with GPS Coordinates & Reverse-Geocoded Address\n- Daily Target Assignment & Progress Tracking\n- Cash & Product/Grocery In-Kind Donations with Receipt Generation\n- Organization Bank Details (Account 3113201002320) for UPI/QR\n- Admin Financial Payment Records & Settlement\n- Leave & Weekly-Off Request & Approval Workflow\n- Field Agent Account Management",
         "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
     },
     "variable": [
@@ -389,7 +389,7 @@ folder_donations = {
             "GET",
             "/api/agent/bank-details/",
             auth_type="agent",
-            desc="Returns active organization bank account details (Account: 84278100000006, IFSC: BARB0VJIDUK, Current Account, UPI VPA) for donation collection."
+            desc="Returns active organization bank account details (Account: 3113201002320, IFSC: CNRB0003113, Canara Bank, UPI VPA: 3113201002320@cnrb) for donation collection."
         ),
         make_req(
             "Admin View Organization Bank Details",
@@ -404,12 +404,12 @@ folder_donations = {
             "/api/admin/bank-details/",
             auth_type="admin",
             body={
-                "account_holder_name": "WeHelp Foundation",
-                "bank_name": "Bank of Baroda",
-                "account_number": "84278100000006",
-                "ifsc_code": "BARB0VJIDUK",
+                "account_holder_name": "WE HELP CHARITABLE SOCIETY AND EDUCATION",
+                "bank_name": "Canara Bank",
+                "account_number": "3113201002320",
+                "ifsc_code": "CNRB0003113",
                 "account_type": "Current Account",
-                "upi_id": "wehelp.donations@upi",
+                "upi_id": "3113201002320@cnrb",
                 "branch_name": "Main Branch",
                 "is_active": True
             },

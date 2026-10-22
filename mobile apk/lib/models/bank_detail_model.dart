@@ -26,14 +26,14 @@ class BankDetailModel {
   factory BankDetailModel.fromJson(Map<String, dynamic> json) {
     return BankDetailModel(
       id: json['id'],
-      accountHolderName: json['account_holder_name'] ?? 'WeHelp Foundation',
-      bankName: json['bank_name'] ?? 'Bank of Baroda',
+      accountHolderName: json['account_holder_name'] ?? 'WE HELP CHARITABLE SOCIETY AND EDUCATION',
+      bankName: json['bank_name'] ?? 'Canara Bank',
       accountNumber: (json['account_number'] != null && json['account_number'].toString().trim().isNotEmpty)
           ? json['account_number'].toString()
-          : '84278100000006',
-      ifscCode: json['ifsc_code'] ?? 'BARB0VJIDUK',
+          : '3113201002320',
+      ifscCode: json['ifsc_code'] ?? 'CNRB0003113',
       accountType: json['account_type'] ?? 'Current Account',
-      upiId: json['upi_id'] ?? 'wehelp.donations@upi',
+      upiId: json['upi_id'] ?? '3113201002320@cnrb',
       branchName: json['branch_name'] ?? 'Main Branch',
       isActive: json['is_active'] ?? true,
     );

@@ -6,18 +6,18 @@ void main() {
   group('BankDetailModel Tests', () {
     test('Official default bank account fallback', () {
       final json = {
-        'account_holder_name': 'WeHelp Foundation',
+        'account_holder_name': 'WE HELP CHARITABLE SOCIETY AND EDUCATION',
         'bank_name': null,
         'account_number': null,
         'ifsc_code': null,
-        'upi_id': 'wehelp.donations@upi',
+        'upi_id': '3113201002320@cnrb',
       };
       final model = BankDetailModel.fromJson(json);
-      expect(model.accountHolderName, 'WeHelp Foundation');
+      expect(model.accountHolderName, 'WE HELP CHARITABLE SOCIETY AND EDUCATION');
       expect(model.hasAccountDetails, true);
-      expect(model.accountNumber, '84278100000006');
-      expect(model.bankName, 'Bank of Baroda');
-      expect(model.ifscCode, 'BARB0VJIDUK');
+      expect(model.accountNumber, '3113201002320');
+      expect(model.bankName, 'Canara Bank');
+      expect(model.ifscCode, 'CNRB0003113');
       expect(model.accountType, 'Current Account');
     });
 

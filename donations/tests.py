@@ -117,8 +117,8 @@ class DonationWorkflowTests(APITestCase):
         url = reverse("agent-bank-details")
         res = self.client.get(url)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
-        self.assertEqual(res.data["account_holder_name"], "WeHelp Foundation")
-        self.assertEqual(res.data["account_number"], "84278100000006")
+        self.assertEqual(res.data["account_holder_name"], "WE HELP CHARITABLE SOCIETY AND EDUCATION")
+        self.assertEqual(res.data["account_number"], "3113201002320")
 
     def test_agent_retrieves_bank_details_when_configured(self):
         """Agent retrieves active bank details when configured by admin"""

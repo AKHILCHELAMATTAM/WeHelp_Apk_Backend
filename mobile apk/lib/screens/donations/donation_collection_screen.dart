@@ -23,14 +23,14 @@ class _DonationCollectionScreenState extends State<DonationCollectionScreen> wit
   final _donorNameController = TextEditingController();
   final _donorPhoneController = TextEditingController();
   final _donorEmailController = TextEditingController();
-  final _amountController = TextEditingController(text: '500');
+  final _amountController = TextEditingController(text: '0');
   final _notesController = TextEditingController();
 
   bool _isSubmitting = false;
   bool _isLoadingBank = false;
   BankDetailModel? _bankDetails;
 
-  final List<double> _quickAmounts = [100, 250, 500, 1000, 2000, 5000];
+  final List<double> _quickAmounts = [0, 100, 250, 500, 1000, 2000, 5000];
 
   @override
   void initState() {
@@ -66,16 +66,26 @@ class _DonationCollectionScreenState extends State<DonationCollectionScreen> wit
   }
 
   String _buildUpiQrString() {
-    final amount = double.tryParse(_amountController.text) ?? 500.0;
-    final vpa = _bankDetails?.upiId.isNotEmpty == true
+    final amountVal = double.tryParse(_amountController.text) ?? 0.0;
+    final vpa = (_bankDetails?.upiId.isNotEmpty == true &&
+            _bankDetails!.upiId != 'wehelp.donations@upi')
         ? _bankDetails!.upiId
-        : 'wehelp.donations@upi';
-    final orgName = Uri.encodeComponent(
-      _bankDetails?.accountHolderName.isNotEmpty == true
-          ? _bankDetails!.accountHolderName
-          : 'WeHelp Foundation',
-    );
-    return 'upi://pay?pa=$vpa&pn=$orgName&am=${amount.toStringAsFixed(2)}&cu=INR&tn=Field%20Donation';
+        : '3113201002320@cnrb';
+    final orgName = (_bankDetails?.accountHolderName.isNotEmpty == true &&
+            _bankDetails!.accountHolderName != 'WeHelp Foundation')
+        ? _bankDetails!.accountHolderName
+        : 'WE HELP CHARITABLE SOCIETY AND EDUCATION';
+
+    // When amount is 0/empty, return exact official NPCI merchant URI requested by user
+    if (amountVal <= 0) {
+      return 'upi://pay?pa=$vpa&pn=$orgName&mc=8398&tr=1234567887654321&tn=Pay to Merchant&am=0&mam=0&cu=INR&refUrl=http://npci.org/upi/schema/';
+    }
+
+    // Dynamic amount if an amount is selected/entered
+    final amStr = amountVal.truncateToDouble() == amountVal
+        ? amountVal.toInt().toString()
+        : amountVal.toStringAsFixed(2);
+    return 'upi://pay?pa=$vpa&pn=$orgName&mc=8398&tr=1234567887654321&tn=Pay to Merchant&am=$amStr&mam=0&cu=INR&refUrl=http://npci.org/upi/schema/';
   }
 
   Future<void> _submitDonation({required String paymentMode}) async {
@@ -463,9 +473,11 @@ class _DonationCollectionScreenState extends State<DonationCollectionScreen> wit
                     spacing: 10,
                     runSpacing: 8,
                     children: _quickAmounts.map((amt) {
-                      final isSelected = _amountController.text == amt.toStringAsFixed(0);
+                      final isSelected = amt == 0
+                          ? (_amountController.text == '0' || _amountController.text.trim().isEmpty)
+                          : (_amountController.text == amt.toStringAsFixed(0));
                       return ChoiceChip(
-                        label: Text('₹${amt.toStringAsFixed(0)}'),
+                        label: Text(amt == 0 ? 'Open (₹0)' : '₹${amt.toStringAsFixed(0)}'),
                         selected: isSelected,
                         selectedColor: AppTheme.primary,
                         labelStyle: TextStyle(
@@ -475,7 +487,7 @@ class _DonationCollectionScreenState extends State<DonationCollectionScreen> wit
                         onSelected: (selected) {
                           if (selected) {
                             setState(() {
-                              _amountController.text = amt.toStringAsFixed(0);
+                              _amountController.text = amt == 0 ? '0' : amt.toStringAsFixed(0);
                             });
                           }
                         },
@@ -532,7 +544,9 @@ class _DonationCollectionScreenState extends State<DonationCollectionScreen> wit
                           ),
                           const SizedBox(height: 14),
                           Text(
-                            'Amount: ₹${_amountController.text}',
+                            (_amountController.text == '0' || _amountController.text.trim().isEmpty)
+                                ? 'Amount: Open / Any Amount'
+                                : 'Amount: ₹${_amountController.text}',
                             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppTheme.primary),
                           ),
                           const SizedBox(height: 12),
@@ -549,7 +563,7 @@ class _DonationCollectionScreenState extends State<DonationCollectionScreen> wit
                                 const Icon(Icons.account_balance_rounded, size: 16, color: AppTheme.secondary),
                                 const SizedBox(width: 8),
                                 Text(
-                                  'A/C: ${_bankDetails?.accountNumber ?? "84278100000006"}',
+                                  'A/C: ${_bankDetails?.accountNumber ?? "3113201002320"}',
                                   style: const TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.bold,
@@ -561,7 +575,7 @@ class _DonationCollectionScreenState extends State<DonationCollectionScreen> wit
                                 InkWell(
                                   onTap: () {
                                     Clipboard.setData(ClipboardData(
-                                      text: _bankDetails?.accountNumber ?? "84278100000006",
+                                      text: _bankDetails?.accountNumber ?? "3113201002320",
                                     ));
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(

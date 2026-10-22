@@ -409,12 +409,12 @@ class AgentBankDetailView(APIView):
         if not bank_detail:
             return Response(
                 {
-                    "account_holder_name": "WeHelp Foundation",
-                    "bank_name": "Bank of Baroda",
-                    "account_number": "84278100000006",
-                    "ifsc_code": "BARB0VJIDUK",
+                    "account_holder_name": "WE HELP CHARITABLE SOCIETY AND EDUCATION",
+                    "bank_name": "Canara Bank",
+                    "account_number": "3113201002320",
+                    "ifsc_code": "CNRB0003113",
                     "account_type": "Current Account",
-                    "upi_id": "wehelp.donations@upi",
+                    "upi_id": "3113201002320@cnrb",
                     "branch_name": "Main Branch",
                     "is_active": True,
                 }
@@ -438,12 +438,12 @@ class AdminBankDetailView(APIView):
         bank_detail = BankDetail.objects.filter(is_active=True).first()
         if not bank_detail:
             bank_detail = BankDetail.objects.create(
-                account_holder_name="WeHelp Foundation",
-                bank_name="Bank of Baroda",
-                account_number="84278100000006",
-                ifsc_code="BARB0VJIDUK",
+                account_holder_name="WE HELP CHARITABLE SOCIETY AND EDUCATION",
+                bank_name="Canara Bank",
+                account_number="3113201002320",
+                ifsc_code="CNRB0003113",
                 account_type="Current Account",
-                upi_id="wehelp.donations@upi",
+                upi_id="3113201002320@cnrb",
                 branch_name="Main Branch",
                 is_active=True,
             )
