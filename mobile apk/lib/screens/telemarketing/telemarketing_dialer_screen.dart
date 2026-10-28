@@ -5,8 +5,10 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/api/api_client.dart';
 import '../../core/api/api_constants.dart';
+import '../../core/services/auth_service.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/call_log_model.dart';
+import '../../models/user_model.dart';
 
 class TelemarketingDialerScreen extends StatefulWidget {
   final String? initialPhoneNumber;
@@ -23,10 +25,10 @@ class TelemarketingDialerScreen extends StatefulWidget {
 }
 
 class _TelemarketingDialerScreenState extends State<TelemarketingDialerScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late TabController _tabController;
 
-  // Dialpad state
+  // Dialpad input controllers
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _contactNameController = TextEditingController();
 
@@ -34,9 +36,12 @@ class _TelemarketingDialerScreenState extends State<TelemarketingDialerScreen>
   bool _isLoadingSummary = false;
   bool _isLoadingLeads = false;
   bool _isLoadingLogs = false;
+  bool _isAutoLogging = false;
+
   CallSummaryModel? _summary;
   List<TelemarketingLeadModel> _leads = [];
   List<CallLogModel> _callLogs = [];
+  UserModel? _currentAgent;
 
   // Filter state for Leads
   String _leadSearchQuery = '';
@@ -45,9 +50,16 @@ class _TelemarketingDialerScreenState extends State<TelemarketingDialerScreen>
   // Filter state for Call Logs
   String _logFilterStatus = 'ALL';
 
+  // Active call lifecycle tracking for 30s auto-completion
+  DateTime? _callStartTime;
+  String? _activeDialedPhone;
+  String? _activeDialedName;
+  bool _isAwaitingCallReturn = false;
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _tabController = TabController(length: 3, vsync: this);
     if (widget.initialPhoneNumber != null) {
       _phoneController.text = widget.initialPhoneNumber!;
@@ -55,15 +67,35 @@ class _TelemarketingDialerScreenState extends State<TelemarketingDialerScreen>
     if (widget.initialContactName != null) {
       _contactNameController.text = widget.initialContactName!;
     }
+    _loadCurrentAgent();
     _loadAllData();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _tabController.dispose();
     _phoneController.dispose();
     _contactNameController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    // When the agent returns to the app from the phone dialer, auto-complete call details
+    if (state == AppLifecycleState.resumed && _isAwaitingCallReturn) {
+      _handleReturnedFromCall();
+    }
+  }
+
+  Future<void> _loadCurrentAgent() async {
+    final user = await AuthService.getCachedUser();
+    if (mounted && user != null) {
+      setState(() {
+        _currentAgent = user;
+      });
+    }
   }
 
   Future<void> _loadAllData() async {
@@ -161,7 +193,9 @@ class _TelemarketingDialerScreenState extends State<TelemarketingDialerScreen>
     }
   }
 
-  // Dial & Launch Call
+  // ----------------------------------------------------
+  // CALL INITIATION & AUTO-COMPLETION ENGINE
+  // ----------------------------------------------------
   Future<void> _initiateCall(String phone, String name) async {
     final cleanPhone = phone.replaceAll(RegExp(r'[^0-9+]'), '');
     if (cleanPhone.isEmpty) {
@@ -173,6 +207,24 @@ class _TelemarketingDialerScreenState extends State<TelemarketingDialerScreen>
       );
       return;
     }
+
+    // Auto-resolve contact name if not provided
+    String resolvedName = name.trim();
+    if (resolvedName.isEmpty) {
+      final matchedLead = _leads.where((l) {
+        final leadNum = l.phoneNumber.replaceAll(RegExp(r'[^0-9+]'), '');
+        return leadNum.contains(cleanPhone) || cleanPhone.contains(leadNum);
+      }).firstOrNull;
+      resolvedName = matchedLead != null ? matchedLead.name : 'Contact ($cleanPhone)';
+    }
+
+    // Set call tracking state before opening phone app
+    setState(() {
+      _activeDialedPhone = cleanPhone;
+      _activeDialedName = resolvedName;
+      _callStartTime = DateTime.now();
+      _isAwaitingCallReturn = true;
+    });
 
     final uri = Uri.parse('tel:$cleanPhone');
     try {
@@ -188,20 +240,364 @@ class _TelemarketingDialerScreenState extends State<TelemarketingDialerScreen>
     } catch (e) {
       debugPrint('Launch dialer exception: $e');
     }
+  }
 
-    // Automatically pop the Call Outcome sheet so staff can record the conversation details
-    if (mounted) {
-      _showCallOutcomeSheet(
+  // Triggered when agent resumes back into the app after phone conversation
+  void _handleReturnedFromCall() async {
+    if (!_isAwaitingCallReturn || _activeDialedPhone == null || _callStartTime == null) return;
+    _isAwaitingCallReturn = false;
+
+    final elapsed = DateTime.now().difference(_callStartTime!).inSeconds;
+    // Auto-complete duration: defaults to 30s as requested by user, or exact if longer
+    final int finalDuration = (elapsed >= 5 && elapsed <= 50) ? 30 : (elapsed > 50 ? elapsed : 30);
+
+    final phone = _activeDialedPhone!;
+    final name = _activeDialedName ?? 'Contact ($phone)';
+    _callStartTime = null;
+
+    await _executeAutoLogCall(
+      phoneNumber: phone,
+      contactName: name,
+      durationSeconds: finalDuration,
+      isAutoTriggered: true,
+    );
+  }
+
+  // Core API call to auto-record call details (duration 30s, contact number, agent ID) to backend
+  Future<void> _executeAutoLogCall({
+    required String phoneNumber,
+    required String contactName,
+    required int durationSeconds,
+    bool isAutoTriggered = false,
+  }) async {
+    if (_isAutoLogging) return;
+    setState(() => _isAutoLogging = true);
+
+    final cleanPhone = phoneNumber.replaceAll(RegExp(r'[^0-9+]'), '');
+    final agentId = _currentAgent?.id;
+    final agentName = _currentAgent?.fullName ?? 'Agent';
+
+    final payload = {
+      'contact_name': contactName.isNotEmpty ? contactName : 'Contact ($cleanPhone)',
+      'phone_number': cleanPhone,
+      'call_type': 'OUTGOING',
+      'status': 'CONNECTED',
+      'call_duration_seconds': durationSeconds,
+      'pledged_amount': '0.00',
+      'notes': 'Auto-completed call log (Duration: ${durationSeconds}s | Agent ID: #${agentId ?? ""} $agentName)',
+      'lead_category': 'DONOR',
+    };
+
+    final res = await ApiClient.post(ApiConstants.callLogs, body: payload);
+
+    if (!mounted) return;
+    setState(() => _isAutoLogging = false);
+
+    if (res.isSuccess && res.data != null) {
+      final savedLogJson = res.data is Map ? (res.data['call_log'] ?? res.data) : null;
+      CallLogModel? savedLog;
+      if (savedLogJson != null && savedLogJson is Map<String, dynamic>) {
+        savedLog = CallLogModel.fromJson(savedLogJson);
+      }
+
+      // Refresh KPIs and list data
+      _loadAllData();
+
+      // Show prominent auto-complete confirmation bottom sheet
+      _showAutoCompleteConfirmationSheet(
+        callLog: savedLog,
         phoneNumber: cleanPhone,
-        contactName: name.isNotEmpty ? name : 'Contact ($cleanPhone)',
+        contactName: contactName.isNotEmpty ? contactName : 'Contact ($cleanPhone)',
+        durationSeconds: durationSeconds,
+        isAutoTriggered: isAutoTriggered,
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: AppTheme.error,
+          content: Text(res.errorMessage ?? 'Failed to auto-log call.'),
+        ),
       );
     }
   }
 
-  // Modal Sheet for Logging Call Outcome
+  // Manual one-tap action: "Auto-Log 30s Call" on Dialpad
+  void _onDirectAutoLogPressed() {
+    final phone = _phoneController.text.trim();
+    if (phone.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter a phone number to auto-log.'),
+          backgroundColor: AppTheme.accent,
+        ),
+      );
+      return;
+    }
+
+    final cleanPhone = phone.replaceAll(RegExp(r'[^0-9+]'), '');
+    String contactName = _contactNameController.text.trim();
+    if (contactName.isEmpty) {
+      final matchedLead = _leads.where((l) {
+        final leadNum = l.phoneNumber.replaceAll(RegExp(r'[^0-9+]'), '');
+        return leadNum.contains(cleanPhone) || cleanPhone.contains(leadNum);
+      }).firstOrNull;
+      contactName = matchedLead != null ? matchedLead.name : 'Contact ($cleanPhone)';
+    }
+
+    _executeAutoLogCall(
+      phoneNumber: cleanPhone,
+      contactName: contactName,
+      durationSeconds: 30, // 30s duration auto-completed!
+      isAutoTriggered: false,
+    );
+  }
+
+  // Auto-Complete Confirmation Bottom Sheet
+  void _showAutoCompleteConfirmationSheet({
+    required CallLogModel? callLog,
+    required String phoneNumber,
+    required String contactName,
+    required int durationSeconds,
+    required bool isAutoTriggered,
+  }) {
+    final agentId = callLog?.agentId ?? _currentAgent?.id;
+    final agentName = callLog?.agentName ?? _currentAgent?.fullName ?? 'Telemarketing Agent';
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Drag indicator
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Success Header Icon & Title
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFDEF7EC),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.check_circle_rounded,
+                    color: Color(0xFF03543F),
+                    size: 32,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Text(
+                            'Call Details Auto-Completed',
+                            style: TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.secondary,
+                            ),
+                          ),
+                          const Spacer(),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFDEF7EC),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.circle, size: 6, color: Color(0xFF03543F)),
+                                SizedBox(width: 4),
+                                Text(
+                                  'LIVE IN ADMIN',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF03543F),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        isAutoTriggered
+                            ? 'Auto-detected return from phone call (~30s duration recorded).'
+                            : 'Auto-recorded call details with 30s duration to Admin Dashboard.',
+                        style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 18),
+
+            // Card with Contact Number, Agent ID & Duration details
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+              ),
+              child: Column(
+                children: [
+                  _detailRow(
+                    icon: Icons.phone_rounded,
+                    label: 'Contact Number',
+                    value: phoneNumber,
+                    valueColor: const Color(0xFF0284C7),
+                    isBold: true,
+                  ),
+                  const Divider(height: 16, color: Color(0xFFE2E8F0)),
+                  _detailRow(
+                    icon: Icons.person_rounded,
+                    label: 'Contact Name',
+                    value: contactName,
+                    isBold: true,
+                  ),
+                  const Divider(height: 16, color: Color(0xFFE2E8F0)),
+                  _detailRow(
+                    icon: Icons.badge_rounded,
+                    label: 'Agent ID',
+                    value: 'Agent ID: #${agentId ?? "-"} ($agentName)',
+                    valueColor: const Color(0xFF4338CA),
+                    isBold: true,
+                  ),
+                  const Divider(height: 16, color: Color(0xFFE2E8F0)),
+                  _detailRow(
+                    icon: Icons.timer_rounded,
+                    label: 'Call Duration',
+                    value: '${durationSeconds}s (Auto-Completed)',
+                    valueColor: const Color(0xFF059669),
+                    isBold: true,
+                  ),
+                  const Divider(height: 16, color: Color(0xFFE2E8F0)),
+                  _detailRow(
+                    icon: Icons.check_circle_outline_rounded,
+                    label: 'Outcome Status',
+                    value: 'Connected / Spoke',
+                    valueColor: const Color(0xFF059669),
+                    isBold: true,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Action Buttons
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      // Open modal to add pledge or remarks to this call log
+                      _showCallOutcomeSheet(
+                        phoneNumber: phoneNumber,
+                        contactName: contactName,
+                        existingLogId: callLog?.id,
+                        initialDuration: durationSeconds,
+                      );
+                    },
+                    icon: const Icon(Icons.edit_note_rounded, color: AppTheme.primary),
+                    label: const Text(
+                      'Add Pledge / Notes',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 13),
+                      side: const BorderSide(color: AppTheme.primary),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF0E9F6E),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 13),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      elevation: 0,
+                    ),
+                    child: const Text(
+                      'DONE',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _detailRow({
+    required IconData icon,
+    required String label,
+    required String value,
+    Color? valueColor,
+    bool isBold = false,
+  }) {
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: const Color(0xFF64748B)),
+        const SizedBox(width: 8),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 13, color: Color(0xFF64748B)),
+        ),
+        const Spacer(),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: isBold ? FontWeight.bold : FontWeight.w500,
+            color: valueColor ?? AppTheme.secondary,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Modal Sheet for Logging / Updating Call Outcome
   void _showCallOutcomeSheet({
     required String phoneNumber,
     required String contactName,
+    int? existingLogId,
+    int initialDuration = 30,
   }) {
     showModalBottomSheet(
       context: context,
@@ -210,6 +606,9 @@ class _TelemarketingDialerScreenState extends State<TelemarketingDialerScreen>
       builder: (ctx) => _CallOutcomeSheet(
         phoneNumber: phoneNumber,
         contactName: contactName,
+        existingLogId: existingLogId,
+        initialDuration: initialDuration,
+        currentAgent: _currentAgent,
         onLogSaved: () {
           _fetchSummary();
           _fetchCallLogs();
@@ -342,11 +741,49 @@ class _TelemarketingDialerScreenState extends State<TelemarketingDialerScreen>
   // TAB 1: DIALPAD
   // ----------------------------------------------------
   Widget _buildDialpadTab() {
+    final agentId = _currentAgent?.id;
+
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // Smart Auto-Complete Live Info Banner
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: const Color(0xFFEFF6FF),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFBFDBFE)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.auto_awesome_rounded, color: Color(0xFF2563EB), size: 20),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Smart 30s Auto-Complete Active',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                          color: Color(0xFF1E40AF),
+                        ),
+                      ),
+                      Text(
+                        'Calls auto-fill 30s duration, contact number, and Agent ID (#${agentId ?? "..."}) to Admin Dashboard.',
+                        style: const TextStyle(fontSize: 11, color: Color(0xFF3B82F6)),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+
           // Optional Contact Name Input
           TextField(
             controller: _contactNameController,
@@ -363,11 +800,11 @@ class _TelemarketingDialerScreenState extends State<TelemarketingDialerScreen>
             ),
             onChanged: (_) => setState(() {}),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
 
           // Main Number Display Screen
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
@@ -394,7 +831,7 @@ class _TelemarketingDialerScreenState extends State<TelemarketingDialerScreen>
                         : _phoneController.text,
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: 24,
+                      fontSize: 22,
                       fontWeight: FontWeight.w800,
                       color: _phoneController.text.isEmpty
                           ? const Color(0xFF94A3B8)
@@ -414,15 +851,14 @@ class _TelemarketingDialerScreenState extends State<TelemarketingDialerScreen>
               ],
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
 
           // Keypad Grid
           _buildKeypad(),
-          const SizedBox(height: 18),
+          const SizedBox(height: 16),
 
           // Bottom Action Row
           Row(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               // Clear All
               if (_phoneController.text.isNotEmpty)
@@ -432,41 +868,64 @@ class _TelemarketingDialerScreenState extends State<TelemarketingDialerScreen>
                   onPressed: _onClearPressed,
                 ),
 
-              const SizedBox(width: 12),
-
-              // Large Call Button
-              ElevatedButton(
-                onPressed: () {
-                  final phone = _phoneController.text.trim();
-                  final name = _contactNameController.text.trim();
-                  _initiateCall(phone, name);
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF0E9F6E), // Green
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                  elevation: 4,
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.call_rounded, size: 26),
-                    SizedBox(width: 10),
-                    Text(
-                      'CALL NOW',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 0.8),
-                    ),
-                  ],
+              // Large Call Now Button
+              Expanded(
+                flex: 3,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    final phone = _phoneController.text.trim();
+                    final name = _contactNameController.text.trim();
+                    _initiateCall(phone, name);
+                  },
+                  icon: const Icon(Icons.call_rounded, size: 22),
+                  label: const Text(
+                    'CALL NOW',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0E9F6E), // Green
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    elevation: 3,
+                  ),
                 ),
               ),
 
-              const SizedBox(width: 12),
+              const SizedBox(width: 8),
 
-              // Direct Log Outcome Button
+              // Quick Auto-Log (30s) One-Tap Button
+              Expanded(
+                flex: 3,
+                child: ElevatedButton.icon(
+                  onPressed: _isAutoLogging ? null : _onDirectAutoLogPressed,
+                  icon: _isAutoLogging
+                      ? const SizedBox(
+                          height: 16,
+                          width: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        )
+                      : const Icon(Icons.flash_on_rounded, size: 20),
+                  label: const Text(
+                    'AUTO-LOG 30s',
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF2563EB), // Blue
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    elevation: 3,
+                  ),
+                ),
+              ),
+
+              const SizedBox(width: 6),
+
+              // Manual Outcome Sheet icon button
               IconButton(
-                icon: const Icon(Icons.post_add_rounded, color: AppTheme.primary),
-                tooltip: 'Log Call Outcome',
+                icon: const Icon(Icons.post_add_rounded, color: AppTheme.primary, size: 26),
+                tooltip: 'Log Call Outcome Manually',
                 onPressed: () {
                   final phone = _phoneController.text.trim();
                   final name = _contactNameController.text.trim();
@@ -511,9 +970,9 @@ class _TelemarketingDialerScreenState extends State<TelemarketingDialerScreen>
       itemCount: keys.length,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3,
-        childAspectRatio: 1.55,
-        crossAxisSpacing: 14,
-        mainAxisSpacing: 10,
+        childAspectRatio: 1.6,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 8,
       ),
       itemBuilder: (context, idx) {
         final digit = keys[idx][0];
@@ -526,16 +985,16 @@ class _TelemarketingDialerScreenState extends State<TelemarketingDialerScreen>
   Widget _dialpadButton(String digit, String letters) {
     return Material(
       color: Colors.white,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(14),
       elevation: 1,
       child: InkWell(
         onTap: () => _onDigitPressed(digit),
         onLongPress: digit == '0' ? () => _onDigitPressed('+') : null,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
         splashColor: AppTheme.primary.withValues(alpha: 0.2),
         child: Container(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(14),
             border: Border.all(color: const Color(0xFFE2E8F0)),
           ),
           child: Column(
@@ -544,7 +1003,7 @@ class _TelemarketingDialerScreenState extends State<TelemarketingDialerScreen>
               Text(
                 digit,
                 style: const TextStyle(
-                  fontSize: 24,
+                  fontSize: 22,
                   fontWeight: FontWeight.w700,
                   color: AppTheme.secondary,
                 ),
@@ -706,7 +1165,7 @@ class _TelemarketingDialerScreenState extends State<TelemarketingDialerScreen>
                                     ),
                                   ),
                                   const SizedBox(width: 10),
-                                  // Call Button
+                                  // Call Button with Auto-Complete on return
                                   ElevatedButton(
                                     onPressed: () {
                                       _initiateCall(lead.phoneNumber, lead.name);
@@ -754,20 +1213,21 @@ class _TelemarketingDialerScreenState extends State<TelemarketingDialerScreen>
   Widget _leadStatusBadge(String status, String display) {
     Color bg = const Color(0xFFF1F5F9);
     Color fg = const Color(0xFF475569);
+
     if (status == 'CONVERTED') {
       bg = const Color(0xFFDEF7EC);
       fg = const Color(0xFF03543F);
-    } else if (status == 'CALLBACK') {
-      bg = const Color(0xFFFEF08A);
-      fg = const Color(0xFF854D0E);
-    } else if (status == 'IN_PROGRESS') {
+    } else if (status == 'CONTACTED') {
       bg = const Color(0xFFE1EFFE);
       fg = const Color(0xFF1E429F);
+    } else if (status == 'LOST') {
+      bg = const Color(0xFFFDE8E8);
+      fg = const Color(0xFF9B1C1C);
     }
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(10)),
+      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(8)),
       child: Text(
         display,
         style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: fg),
@@ -776,14 +1236,12 @@ class _TelemarketingDialerScreenState extends State<TelemarketingDialerScreen>
   }
 
   // ----------------------------------------------------
-  // TAB 3: CALL LOGS (HISTORY)
+  // TAB 3: CALL LOGS HISTORY
   // ----------------------------------------------------
   Widget _buildCallLogsTab() {
     final filteredLogs = _callLogs.where((log) {
       if (_logFilterStatus == 'ALL') return true;
-      if (_logFilterStatus == 'CONNECTED') return log.isConnected;
       if (_logFilterStatus == 'PLEDGED') return log.isPledged;
-      if (_logFilterStatus == 'CALLBACK') return log.isCallback;
       return log.status == _logFilterStatus;
     }).toList();
 
@@ -865,13 +1323,35 @@ class _TelemarketingDialerScreenState extends State<TelemarketingDialerScreen>
                                                 color: AppTheme.secondary,
                                               ),
                                             ),
-                                            Text(
-                                              log.phoneNumber,
-                                              style: const TextStyle(
-                                                fontSize: 13,
-                                                color: Color(0xFF64748B),
-                                                fontWeight: FontWeight.w500,
-                                              ),
+                                            const SizedBox(height: 2),
+                                            Row(
+                                              children: [
+                                                Text(
+                                                  log.phoneNumber,
+                                                  style: const TextStyle(
+                                                    fontSize: 13,
+                                                    color: Color(0xFF0284C7),
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 8),
+                                                if (log.agentId != null)
+                                                  Container(
+                                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                                                    decoration: BoxDecoration(
+                                                      color: const Color(0xFFEEF2FF),
+                                                      borderRadius: BorderRadius.circular(6),
+                                                    ),
+                                                    child: Text(
+                                                      'Agent ID: #${log.agentId}',
+                                                      style: const TextStyle(
+                                                        fontSize: 10,
+                                                        fontWeight: FontWeight.bold,
+                                                        color: Color(0xFF4338CA),
+                                                      ),
+                                                    ),
+                                                  ),
+                                              ],
                                             ),
                                           ],
                                         ),
@@ -889,18 +1369,39 @@ class _TelemarketingDialerScreenState extends State<TelemarketingDialerScreen>
                                     children: [
                                       Row(
                                         children: [
-                                          const Icon(Icons.timer_outlined, size: 14, color: Color(0xFF64748B)),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            log.formattedDuration,
-                                            style: const TextStyle(
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.w600,
-                                              color: Color(0xFF64748B),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                            decoration: BoxDecoration(
+                                              color: log.callDurationSeconds >= 30
+                                                  ? const Color(0xFFDEF7EC)
+                                                  : const Color(0xFFF1F5F9),
+                                              borderRadius: BorderRadius.circular(6),
+                                            ),
+                                            child: Row(
+                                              children: [
+                                                Icon(
+                                                  Icons.timer_outlined,
+                                                  size: 13,
+                                                  color: log.callDurationSeconds >= 30
+                                                      ? const Color(0xFF03543F)
+                                                      : const Color(0xFF64748B),
+                                                ),
+                                                const SizedBox(width: 4),
+                                                Text(
+                                                  log.formattedDuration,
+                                                  style: TextStyle(
+                                                    fontSize: 11,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: log.callDurationSeconds >= 30
+                                                        ? const Color(0xFF03543F)
+                                                        : const Color(0xFF64748B),
+                                                  ),
+                                                ),
+                                              ],
                                             ),
                                           ),
                                           if (log.pledgedAmount > 0) ...[
-                                            const SizedBox(width: 12),
+                                            const SizedBox(width: 10),
                                             const Icon(Icons.favorite_rounded, size: 14, color: Color(0xFF059669)),
                                             const SizedBox(width: 4),
                                             Text(
@@ -1016,17 +1517,23 @@ class _TelemarketingDialerScreenState extends State<TelemarketingDialerScreen>
 }
 
 // ----------------------------------------------------
-// BOTTOM SHEET MODAL: LOG CALL OUTCOME
+// BOTTOM SHEET MODAL: LOG OR UPDATE CALL OUTCOME
 // ----------------------------------------------------
 class _CallOutcomeSheet extends StatefulWidget {
   final String phoneNumber;
   final String contactName;
+  final int? existingLogId;
+  final int initialDuration;
   final VoidCallback onLogSaved;
+  final UserModel? currentAgent;
 
   const _CallOutcomeSheet({
     required this.phoneNumber,
     required this.contactName,
+    this.existingLogId,
+    this.initialDuration = 30,
     required this.onLogSaved,
+    this.currentAgent,
   });
 
   @override
@@ -1041,7 +1548,7 @@ class _CallOutcomeSheetState extends State<_CallOutcomeSheet> {
   final TextEditingController _pledgeController = TextEditingController();
 
   String _selectedStatus = 'CONNECTED';
-  int _selectedDuration = 60; // seconds
+  late int _selectedDuration; // seconds, defaults to 30s
   DateTime? _followUpDate;
   bool _isSaving = false;
 
@@ -1071,6 +1578,7 @@ class _CallOutcomeSheetState extends State<_CallOutcomeSheet> {
     super.initState();
     _nameController = TextEditingController(text: widget.contactName);
     _phoneController = TextEditingController(text: widget.phoneNumber);
+    _selectedDuration = widget.initialDuration;
   }
 
   @override
@@ -1122,7 +1630,14 @@ class _CallOutcomeSheetState extends State<_CallOutcomeSheet> {
       'lead_category': 'DONOR',
     };
 
-    final res = await ApiClient.post(ApiConstants.callLogs, body: payload);
+    final ApiResponse<dynamic> res;
+    if (widget.existingLogId != null) {
+      // Update existing auto-completed call log
+      res = await ApiClient.patch('${ApiConstants.callLogs}${widget.existingLogId}/', body: payload);
+    } else {
+      // Create new call log
+      res = await ApiClient.post(ApiConstants.callLogs, body: payload);
+    }
 
     if (!mounted) return;
     setState(() => _isSaving = false);
@@ -1133,7 +1648,7 @@ class _CallOutcomeSheetState extends State<_CallOutcomeSheet> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           backgroundColor: Color(0xFF0E9F6E),
-          content: Text('Call log recorded successfully and sent to Admin Panel!'),
+          content: Text('Call details updated and synced to Admin Dashboard!'),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -1149,6 +1664,9 @@ class _CallOutcomeSheetState extends State<_CallOutcomeSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final agentId = widget.currentAgent?.id;
+    final agentName = widget.currentAgent?.fullName ?? 'Agent';
+
     return Container(
       padding: EdgeInsets.only(
         top: 16,
@@ -1180,17 +1698,31 @@ class _CallOutcomeSheetState extends State<_CallOutcomeSheet> {
               ),
               const SizedBox(height: 14),
 
-              // Title
+              // Title and Agent Badge
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Record Call Outcome',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.secondary,
-                    ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.existingLogId != null ? 'Update Call Details' : 'Record Call Outcome',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.secondary,
+                        ),
+                      ),
+                      if (agentId != null)
+                        Text(
+                          'Agent ID: #$agentId ($agentName)',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF4338CA),
+                          ),
+                        ),
+                    ],
                   ),
                   IconButton(
                     icon: const Icon(Icons.close_rounded),
@@ -1291,7 +1823,7 @@ class _CallOutcomeSheetState extends State<_CallOutcomeSheet> {
                 const SizedBox(height: 14),
               ],
 
-              // Call Duration Selector
+              // Call Duration Selector (30s default)
               const Text(
                 'Call Duration',
                 style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.secondary),
@@ -1345,9 +1877,11 @@ class _CallOutcomeSheetState extends State<_CallOutcomeSheet> {
                         width: 20,
                         child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                       )
-                    : const Text(
-                        'SAVE CALL LOG TO ADMIN',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                    : Text(
+                        widget.existingLogId != null
+                            ? 'UPDATE CALL LOG IN ADMIN'
+                            : 'SAVE CALL LOG TO ADMIN',
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                       ),
               ),
             ],

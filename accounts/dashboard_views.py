@@ -11,6 +11,7 @@ from rest_framework.views import APIView
 from attendance.models import Attendance, DailyTarget
 from attendance.serializers import AgentDailyTargetProgressSerializer
 from calls.models import CallLog
+from calls.serializers import CallLogSerializer
 from donations.models import Donation
 from donations.serializers import DonationDetailSerializer
 from leaves.models import LeaveRequest
@@ -100,6 +101,7 @@ class AdminDashboardView(APIView):
         # Recent activities
         recent_donations = Donation.objects.all().select_related("agent")[:5]
         recent_pending_leaves = LeaveRequest.objects.filter(status="PENDING").select_related("agent")[:5]
+        recent_calls = CallLog.objects.all().select_related("agent")[:10]
 
         return Response(
             {
@@ -132,6 +134,7 @@ class AdminDashboardView(APIView):
                 "recent_pending_leaves": LeaveRequestDetailSerializer(
                     recent_pending_leaves, many=True
                 ).data,
+                "recent_calls": CallLogSerializer(recent_calls, many=True).data,
             },
             status=status.HTTP_200_OK,
         )

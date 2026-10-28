@@ -103,6 +103,40 @@ class ApiClient {
     }
   }
 
+  static Future<ApiResponse<dynamic>> patch(
+    String endpoint, {
+    Map<String, dynamic>? body,
+    bool requiresAuth = true,
+  }) async {
+    try {
+      final baseUrl = await ApiConstants.getBaseUrl();
+      final uri = Uri.parse('$baseUrl$endpoint');
+      final headers = await _getHeaders(requiresAuth: requiresAuth);
+
+      final response = await http
+          .patch(
+            uri,
+            headers: headers,
+            body: body != null ? jsonEncode(body) : null,
+          )
+          .timeout(const Duration(seconds: 15));
+
+      return _processResponse(response);
+    } on SocketException {
+      return ApiResponse(
+        isSuccess: false,
+        statusCode: 0,
+        errorMessage: 'Cannot connect to server. Please verify your network.',
+      );
+    } catch (e) {
+      return ApiResponse(
+        isSuccess: false,
+        statusCode: 500,
+        errorMessage: 'Request failed: ${e.toString()}',
+      );
+    }
+  }
+
   static ApiResponse<dynamic> _processResponse(http.Response response) {
     dynamic decodedData;
     try {

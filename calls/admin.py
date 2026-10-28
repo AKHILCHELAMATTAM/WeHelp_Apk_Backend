@@ -6,14 +6,15 @@ from .models import CallLog, TelemarketingLead
 @admin.register(CallLog)
 class CallLogAdmin(admin.ModelAdmin):
     list_display = (
+        "id",
+        "phone_number_display",
         "contact_name",
-        "phone_number",
+        "agent_id_badge",
         "agent_display",
+        "duration_display",
         "status_badge",
         "call_type_display",
-        "duration_display",
         "pledged_amount_display",
-        "follow_up_display",
         "created_at_display",
     )
     list_filter = (
@@ -26,6 +27,7 @@ class CallLogAdmin(admin.ModelAdmin):
     search_fields = (
         "contact_name",
         "phone_number",
+        "agent__id",
         "agent__username",
         "agent__first_name",
         "agent__last_name",
@@ -69,33 +71,35 @@ class CallLogAdmin(admin.ModelAdmin):
         ),
     )
 
+    def phone_number_display(self, obj):
+        return format_html(
+            '<a href="tel:{}" style="font-family: monospace; font-weight: bold; color: #0284C7; text-decoration: none;">📞 {}</a>',
+            obj.phone_number,
+            obj.phone_number,
+        )
+
+    phone_number_display.short_description = "Contact Number"
+    phone_number_display.admin_order_field = "phone_number"
+
+    def agent_id_badge(self, obj):
+        return format_html(
+            '<span style="background: #E0E7FF; color: #3730A3; font-weight: 700; padding: 3px 8px; border-radius: 6px; font-size: 11px;">Agent ID: #{}</span>',
+            obj.agent_id,
+        )
+
+    agent_id_badge.short_description = "Agent ID"
+    agent_id_badge.admin_order_field = "agent_id"
+
     def agent_display(self, obj):
         full = obj.agent.get_full_name()
         display = full if full else obj.agent.username
-        return format_html("<strong>{}</strong>", display)
+        return format_html("<strong>{}</strong> ({})", display, obj.agent.username)
 
-    agent_display.short_description = "Staff / Agent"
+    agent_display.short_description = "Staff Name"
     agent_display.admin_order_field = "agent__username"
 
     def status_badge(self, obj):
-        colors = {
-            "CONNECTED": ("#DEF7EC", "#03543F"),
-            "INTERESTED": ("#E1EFFE", "#1E429F"),
-            "DONATION_PLEDGED": ("#DEF7EC", "#0E9F6E"),
-            "CALLBACK_REQUESTED": ("#FEF08A", "#854D0E"),
-            "BUSY": ("#F3F4F6", "#4B5563"),
-            "NO_ANSWER": ("#F3F4F6", "#4B5563"),
-            "SWITCHED_OFF": ("#FEE2E2", "#991B1B"),
-            "WRONG_NUMBER": ("#FEE2E2", "#991B1B"),
-            "NOT_INTERESTED": ("#FEE2E2", "#991B1B"),
-        }
-        bg, fg = colors.get(obj.status, ("#F3F4F6", "#374151"))
-        return format_html(
-            '<span style="background-color: {}; color: {}; padding: 4px 10px; border-radius: 9999px; font-weight: 600; font-size: 11px; display: inline-block;">{}</span>',
-            bg,
-            fg,
-            obj.get_status_display(),
-        )
+        return obj.status_badge
 
     status_badge.short_description = "Call Outcome"
     status_badge.admin_order_field = "status"
@@ -111,7 +115,12 @@ class CallLogAdmin(admin.ModelAdmin):
     call_type_display.short_description = "Type"
 
     def duration_display(self, obj):
-        return obj.formatted_duration
+        if obj.call_duration_seconds >= 30:
+            return format_html(
+                '<span style="background: #DEF7EC; color: #03543F; font-weight: 700; padding: 3px 8px; border-radius: 6px; font-size: 11px;">⏱ {}</span>',
+                obj.formatted_duration,
+            )
+        return format_html('<span style="color: #64748B;">⏱ {}</span>', obj.formatted_duration)
 
     duration_display.short_description = "Duration"
     duration_display.admin_order_field = "call_duration_seconds"

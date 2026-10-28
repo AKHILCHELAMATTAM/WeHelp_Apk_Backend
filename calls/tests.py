@@ -139,3 +139,34 @@ class TelemarketingCallsTests(APITestCase):
         self.assertIn("total_calls_all_time", res.data)
         self.assertIn("disposition_breakdown", res.data)
         self.assertIn("agent_performance_today", res.data)
+
+    def test_agent_update_call_log_and_auto_complete_fields(self):
+        """Verify Agent ID, Contact Number, and 30s duration auto-complete serialization."""
+        call = CallLog.objects.create(
+            agent=self.agent1,
+            contact_name="Ramesh Sharma",
+            phone_number="+919876543210",
+            status="CONNECTED",
+            call_duration_seconds=30,
+            pledged_amount=Decimal("0.00"),
+        )
+        self.client.force_authenticate(user=self.agent1)
+        url = reverse("agent-call-detail", kwargs={"pk": call.pk})
+
+        # Test GET
+        res = self.client.get(url)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data["agent_id"], self.agent1.id)
+        self.assertEqual(res.data["phone_number"], "+919876543210")
+        self.assertEqual(res.data["call_duration_seconds"], 30)
+        self.assertEqual(res.data["formatted_duration"], "30s")
+
+        # Test PATCH (e.g. updating notes or pledged amount)
+        patch_res = self.client.patch(
+            url,
+            {"pledged_amount": "500.00", "notes": "Donor pledged 500"},
+        )
+        self.assertEqual(patch_res.status_code, status.HTTP_200_OK)
+        call.refresh_from_db()
+        self.assertEqual(call.pledged_amount, Decimal("500.00"))
+        self.assertEqual(call.notes, "Donor pledged 500")

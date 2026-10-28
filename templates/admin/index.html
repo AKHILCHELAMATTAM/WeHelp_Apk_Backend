@@ -1,0 +1,280 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static admin_filters telemarketing_tags %}
+
+{% block extrastyle %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static "admin/css/dashboard.css" %}">
+    <style>
+        .wehelp-dash-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 18px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+        .wehelp-dash-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 12px;
+            margin-bottom: 16px;
+        }
+        .wehelp-dash-title {
+            font-size: 17px;
+            font-weight: 700;
+            color: #0f172a;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .wehelp-dash-badge {
+            background: #ecfdf5;
+            color: #059669;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 9999px;
+            border: 1px solid #a7f3d0;
+        }
+        .wehelp-kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .wehelp-kpi-item {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 10px 14px;
+        }
+        .wehelp-kpi-val {
+            font-size: 18px;
+            font-weight: 800;
+            color: #0f172a;
+        }
+        .wehelp-kpi-lbl {
+            font-size: 11px;
+            color: #64748b;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .wehelp-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        .wehelp-table th {
+            background: #f8fafc;
+            color: #475569;
+            font-weight: 700;
+            text-align: left;
+            padding: 10px 12px;
+            border-bottom: 1px solid #cbd5e1;
+            font-size: 12px;
+        }
+        .wehelp-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #f1f5f9;
+            color: #334155;
+            vertical-align: middle;
+        }
+        .wehelp-table tr:hover td {
+            background: #f8fafc;
+        }
+        .agent-id-pill {
+            background: #e0e7ff;
+            color: #3730a3;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-family: monospace;
+            display: inline-block;
+        }
+        .dur-pill {
+            background: #def7ec;
+            color: #03543f;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 4px;
+            font-size: 11px;
+            display: inline-block;
+        }
+        .phone-link {
+            font-family: monospace;
+            font-weight: 700;
+            color: #0284c7;
+            text-decoration: none;
+        }
+        .phone-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+{% endblock %}
+
+{% block coltype %}colMS{% endblock %}
+{% block bodyclass %}{{ block.super }} dashboard{% endblock %}
+{% block nav-breadcrumbs %}{% endblock %}
+{% block nav-sidebar %}{% endblock %}
+
+{% block content %}
+<div id="content-main">
+
+  <!-- ==================================================== -->
+  <!-- TELEMARKETING STAFF LIVE CALL LOGS & AGENT ACTIVITY -->
+  <!-- ==================================================== -->
+  {% get_telemarketing_kpis as call_kpis %}
+  {% get_recent_call_logs 8 as recent_calls %}
+
+  <div class="wehelp-dash-card">
+    <div class="wehelp-dash-header">
+      <div>
+        <h2 class="wehelp-dash-title">
+          <span>📞 Telemarketing Staff Live Call Activity & Logs</span>
+          <span class="wehelp-dash-badge">LIVE DASHBOARD</span>
+        </h2>
+        <span style="font-size: 12px; color: #64748b;">
+          Real-time auto-completed call logs from staff with contact numbers, Agent IDs, and call duration.
+        </span>
+      </div>
+      <div>
+        <a href="{% url 'admin:calls_calllog_changelist' %}" style="background: #059669; color: #ffffff; padding: 7px 14px; border-radius: 6px; font-weight: 600; font-size: 12px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+          <span>View All Call Logs</span>
+          <span>&rarr;</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Telemarketing KPI Metric Tiles -->
+    <div class="wehelp-kpi-grid">
+      <div class="wehelp-kpi-item">
+        <div class="wehelp-kpi-val">{{ call_kpis.today_calls }}</div>
+        <div class="wehelp-kpi-lbl">Today's Calls</div>
+      </div>
+      <div class="wehelp-kpi-item">
+        <div class="wehelp-kpi-val" style="color: #059669;">{{ call_kpis.calls_30s }}</div>
+        <div class="wehelp-kpi-lbl">Calls &ge; 30s</div>
+      </div>
+      <div class="wehelp-kpi-item">
+        <div class="wehelp-kpi-val" style="color: #2563eb;">{{ call_kpis.connected_count }}</div>
+        <div class="wehelp-kpi-lbl">Connected / Spoke</div>
+      </div>
+      <div class="wehelp-kpi-item">
+        <div class="wehelp-kpi-val" style="color: #0d9488;">&#8377;{{ call_kpis.pledged_sum|floatformat:0 }}</div>
+        <div class="wehelp-kpi-lbl">Donations Pledged</div>
+      </div>
+      <div class="wehelp-kpi-item">
+        <div class="wehelp-kpi-val" style="color: #64748b;">{{ call_kpis.all_time_calls }}</div>
+        <div class="wehelp-kpi-lbl">All Time Calls</div>
+      </div>
+    </div>
+
+    <!-- Recent Call Logs Table -->
+    {% if recent_calls %}
+    <div style="overflow-x: auto; border: 1px solid #e2e8f0; border-radius: 8px;">
+      <table class="wehelp-table">
+        <thead>
+          <tr>
+            <th>Contact Number</th>
+            <th>Contact Name</th>
+            <th>Agent ID</th>
+            <th>Staff / Agent Name</th>
+            <th>Duration</th>
+            <th>Call Outcome</th>
+            <th>Pledged (&#8377;)</th>
+            <th>Time Logged</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for call in recent_calls %}
+          <tr>
+            <td>
+              <a href="tel:{{ call.phone_number }}" class="phone-link">
+                &#128222; {{ call.phone_number }}
+              </a>
+            </td>
+            <td>
+              <strong>{{ call.contact_name }}</strong>
+              {% if call.lead_category %}
+              <span style="font-size: 10px; color: #94a3b8; display: block;">{{ call.get_lead_category_display }}</span>
+              {% endif %}
+            </td>
+            <td>
+              <span class="agent-id-pill">Agent ID: #{{ call.agent_id }}</span>
+            </td>
+            <td>
+              <strong>{{ call.agent.get_full_name|default:call.agent.username }}</strong>
+              <span style="color: #64748b; font-size: 11px;">({{ call.agent.username }})</span>
+            </td>
+            <td>
+              <span class="dur-pill">&#9201; {{ call.formatted_duration }}</span>
+            </td>
+            <td>
+              {{ call.status_badge }}
+            </td>
+            <td>
+              {% if call.pledged_amount and call.pledged_amount > 0 %}
+                <strong style="color: #059669;">&#8377;{{ call.pledged_amount|floatformat:2 }}</strong>
+              {% else %}
+                <span style="color: #94a3b8;">-</span>
+              {% endif %}
+            </td>
+            <td style="color: #64748b; font-size: 12px; white-space: nowrap;">
+              {{ call.created_at|date:"d M, h:i A" }}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p style="color: #64748b; padding: 16px 0; text-align: center; margin: 0;">
+      No telemarketing calls recorded yet today. When agents dial or auto-complete calls, they will appear here live.
+    </p>
+    {% endif %}
+  </div>
+
+  <!-- Standard Django Admin App List Modules -->
+  <div class="app-list">
+    {% include "admin/app_list.html" with app_list=app_list show_changelinks=True %}
+  </div>
+</div>
+{% endblock %}
+
+{% block sidebar %}
+<div id="content-related">
+    <div class="module" id="recent-actions-module">
+        <h2>{% translate 'Recent actions' %}</h2>
+        <h3>{% translate 'My actions' %}</h3>
+            {% load log %}
+            {% get_admin_log 10 as admin_log for_user user %}
+            {% if not admin_log %}
+            <p>{% translate 'None available' %}</p>
+            {% else %}
+            <ul class="actionlist">
+            {% for entry in admin_log %}
+            <li class="{% if entry.is_addition %}addlink{% endif %}{% if entry.is_change %}changelink{% endif %}{% if entry.is_deletion %}deletelink{% endif %}">
+                <span class="visually-hidden">{% if entry.is_addition %}{% translate 'Added:' %}{% elif entry.is_change %}{% translate 'Changed:' %}{% elif entry.is_deletion %}{% translate 'Deleted:' %}{% endif %}</span>
+                {% if entry.is_deletion or not entry.get_admin_url %}
+                    {{ entry.object_repr|to_object_display_value }}
+                {% else %}
+                    <a href="{{ entry.get_admin_url }}">{{ entry.object_repr|to_object_display_value }}</a>
+                {% endif %}
+                <br>
+                {% if entry.content_type %}
+                    <span class="mini quiet">{% filter capfirst %}{{ entry.content_type.name }}{% endfilter %}</span>
+                {% else %}
+                    <span class="mini quiet">{% translate 'Unknown content' %}</span>
+                {% endif %}
+            </li>
+            {% endfor %}
+            </ul>
+            {% endif %}
+    </div>
+</div>
+{% endblock %}

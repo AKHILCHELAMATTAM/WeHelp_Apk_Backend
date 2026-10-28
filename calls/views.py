@@ -72,6 +72,19 @@ class AgentCallLogListCreateView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+class AgentCallLogDetailView(generics.RetrieveUpdateAPIView):
+    """
+    Allows the authenticated agent to view or update notes, disposition,
+    and donation pledges on their recorded call logs.
+    """
+
+    permission_classes = [IsAgentUserRole]
+    serializer_class = CallLogSerializer
+
+    def get_queryset(self):
+        return CallLog.objects.filter(agent=self.request.user)
+
+
 class AgentCallSummaryView(APIView):
     """
     Summary metrics for the authenticated agent's telemarketing performance.

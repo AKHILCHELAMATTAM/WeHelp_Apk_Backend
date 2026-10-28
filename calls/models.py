@@ -118,6 +118,30 @@ class CallLog(models.Model):
             return f"{mins}m {secs}s"
         return f"{secs}s"
 
+    @property
+    def status_badge(self):
+        """Return formatted HTML badge for the disposition status."""
+        from django.utils.html import format_html
+
+        colors = {
+            "CONNECTED": ("#DEF7EC", "#03543F"),
+            "INTERESTED": ("#E1EFFE", "#1E429F"),
+            "DONATION_PLEDGED": ("#DEF7EC", "#0E9F6E"),
+            "CALLBACK_REQUESTED": ("#FEF08A", "#854D0E"),
+            "BUSY": ("#F3F4F6", "#4B5563"),
+            "NO_ANSWER": ("#F3F4F6", "#4B5563"),
+            "SWITCHED_OFF": ("#FEE2E2", "#991B1B"),
+            "WRONG_NUMBER": ("#FEE2E2", "#991B1B"),
+            "NOT_INTERESTED": ("#FEE2E2", "#991B1B"),
+        }
+        bg, fg = colors.get(self.status, ("#F3F4F6", "#374151"))
+        return format_html(
+            '<span style="background-color: {}; color: {}; padding: 3px 8px; border-radius: 9999px; font-weight: 600; font-size: 11px; display: inline-block;">{}</span>',
+            bg,
+            fg,
+            self.get_status_display(),
+        )
+
 
 class TelemarketingLead(models.Model):
     """
