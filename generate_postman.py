@@ -742,10 +742,92 @@ folder_agents = {
 }
 
 # ==========================================
-# 10. SYSTEM & DOCUMENTATION
+# 10. TELEMARKETING & CALL LOGS
+# ==========================================
+folder_telemarketing = {
+    "name": "10. Telemarketing & Call Logs",
+    "description": "Telemarketing dialer endpoints, agent call outcome logs, lead directory, and admin monitoring of all staff call activities.",
+    "item": [
+        make_req(
+            "Agent Log Call Outcome",
+            "POST",
+            "/api/agent/calls/",
+            auth_type="agent",
+            body={
+                "contact_name": "Dr. Sunita Sharma",
+                "phone_number": "+919446054321",
+                "call_type": "OUTGOING",
+                "status": "DONATION_PLEDGED",
+                "call_duration_seconds": 180,
+                "pledged_amount": "5000.00",
+                "notes": "Doctor pledged 5000 for student education kits.",
+                "lead_category": "SPONSOR"
+            },
+            desc="Telemarketing staff records a call outcome with duration, disposition, notes, and pledge."
+        ),
+        make_req(
+            "Agent Get Own Call Logs",
+            "GET",
+            "/api/agent/calls/",
+            auth_type="agent",
+            params=[
+                ("status", "CONNECTED", "Filter by disposition"),
+                ("search", "Sunita", "Search contact name or phone")
+            ],
+            desc="Retrieves the authenticated agent's recent telemarketing call history."
+        ),
+        make_req(
+            "Agent Get Telemarketing Call Summary",
+            "GET",
+            "/api/agent/calls/summary/",
+            auth_type="agent",
+            desc="Today's call counts, connected calls count, and total donation pledges by the agent."
+        ),
+        make_req(
+            "Agent List Telemarketing Leads",
+            "GET",
+            "/api/agent/telemarketing/leads/",
+            auth_type="agent",
+            params=[
+                ("category", "DONOR", "DONOR, SPONSOR, CORPORATE, VOLUNTEER"),
+                ("search", "Kochi", "Search name, phone, or city")
+            ],
+            desc="Directory of leads and donor contacts available for the agent to call."
+        ),
+        make_req(
+            "Admin List All Call Logs Across All Staff",
+            "GET",
+            "/api/admin/calls/",
+            auth_type="admin",
+            params=[
+                ("agent_id", "{{agent_id}}", "Filter by specific agent"),
+                ("status", "DONATION_PLEDGED", "Filter by disposition"),
+                ("search", "Sharma", "Search contact, phone, notes, or agent name")
+            ],
+            desc="Admin view of all call logs recorded across all telemarketing agents."
+        ),
+        make_req(
+            "Admin Get Telemarketing Summary & Agent Breakdown",
+            "GET",
+            "/api/admin/calls/summary/",
+            auth_type="admin",
+            desc="Admin analytics on telemarketing performance, disposition breakdown, and agent rankings."
+        ),
+        make_req(
+            "Admin Manage Telemarketing Leads",
+            "GET",
+            "/api/admin/telemarketing/leads/",
+            auth_type="admin",
+            desc="Admin list of all telemarketing leads."
+        )
+    ]
+}
+
+# ==========================================
+# 11. SYSTEM & DOCUMENTATION
 # ==========================================
 folder_system = {
-    "name": "10. System & API Documentation",
+    "name": "11. System & API Documentation",
     "description": "Root endpoint and interactive Swagger/OpenAPI documentation endpoints.",
     "item": [
         make_req(
@@ -773,6 +855,7 @@ collection["item"] = [
     folder_payments,
     folder_leaves,
     folder_agents,
+    folder_telemarketing,
     folder_system
 ]
 

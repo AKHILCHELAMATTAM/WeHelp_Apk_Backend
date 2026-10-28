@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile_apk/models/bank_detail_model.dart';
+import 'package:mobile_apk/models/call_log_model.dart';
 import 'package:mobile_apk/models/leave_model.dart';
 
 void main() {
@@ -94,6 +95,73 @@ void main() {
       final rejectedModel = LeaveRequestModel.fromJson(rejectedJson);
       expect(rejectedModel.isRejected, true);
       expect(rejectedModel.adminRemarks, 'High volume donation drive on selected dates.');
+    });
+  });
+
+  group('CallLogModel Tests', () {
+    test('Call log model parses correctly and evaluates pledge helpers', () {
+      final json = {
+        'id': 1,
+        'agent_id': 5,
+        'agent_username': 'agent_rahul',
+        'agent_name': 'Rahul Sharma',
+        'contact_name': 'Dr. Sunita Sharma',
+        'phone_number': '+919446054321',
+        'call_type': 'OUTGOING',
+        'call_type_display': 'Outgoing Call',
+        'status': 'DONATION_PLEDGED',
+        'status_display': 'Donation Pledged',
+        'call_duration_seconds': 195,
+        'formatted_duration': '3m 15s',
+        'pledged_amount': '5000.00',
+        'notes': 'Doctor pledged 5000 for student kits',
+        'lead_category': 'SPONSOR',
+      };
+
+      final model = CallLogModel.fromJson(json);
+      expect(model.contactName, 'Dr. Sunita Sharma');
+      expect(model.phoneNumber, '+919446054321');
+      expect(model.isPledged, true);
+      expect(model.isConnected, true);
+      expect(model.isCallback, false);
+      expect(model.pledgedAmount, 5000.0);
+      expect(model.formattedDuration, '3m 15s');
+    });
+
+    test('Telemarketing lead model parses correctly', () {
+      final json = {
+        'id': 2,
+        'name': 'Rajesh Menon',
+        'phone_number': '+919847012345',
+        'city': 'Kochi',
+        'category': 'DONOR',
+        'category_display': 'Individual Donor',
+        'status': 'NEW',
+        'status_display': 'New Lead',
+        'total_calls_count': 0,
+        'notes': 'Interested in education sponsorship',
+      };
+
+      final lead = TelemarketingLeadModel.fromJson(json);
+      expect(lead.name, 'Rajesh Menon');
+      expect(lead.phoneNumber, '+919847012345');
+      expect(lead.city, 'Kochi');
+      expect(lead.status, 'NEW');
+    });
+
+    test('Call summary model parses correctly', () {
+      final json = {
+        'today_calls_count': 12,
+        'today_connected_count': 8,
+        'today_pledged_amount': 7500.0,
+        'total_calls_count': 45,
+        'total_pledged_amount': 25000.0,
+      };
+
+      final summary = CallSummaryModel.fromJson(json);
+      expect(summary.todayCallsCount, 12);
+      expect(summary.todayConnectedCount, 8);
+      expect(summary.todayPledgedAmount, 7500.0);
     });
   });
 }

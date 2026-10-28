@@ -12,6 +12,7 @@ import '../donations/donation_collection_screen.dart';
 import '../donations/product_collection_screen.dart';
 import '../profile/profile_screen.dart';
 import '../requests/supply_requests_screen.dart';
+import '../telemarketing/telemarketing_dialer_screen.dart';
 
 class AgentHomeScreen extends StatefulWidget {
   final UserModel agent;
@@ -145,6 +146,18 @@ class _AgentHomeScreenState extends State<AgentHomeScreen> {
                 ],
               ),
               actions: [
+                IconButton(
+                  icon: const Icon(Icons.phone_in_talk_rounded),
+                  tooltip: 'Telemarketing Dialer',
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const TelemarketingDialerScreen(),
+                      ),
+                    );
+                  },
+                ),
                 IconButton(
                   icon: const Icon(Icons.refresh_rounded),
                   tooltip: 'Refresh Data',
@@ -443,6 +456,72 @@ class _AgentHomeScreenState extends State<AgentHomeScreen> {
               ),
               const SizedBox(height: 20),
             ],
+
+            // Telemarketing & Call Center Featured Card
+            InkWell(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const TelemarketingDialerScreen(),
+                  ),
+                );
+              },
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF1E3A8A), Color(0xFF2563EB)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF2563EB).withValues(alpha: 0.25),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.18),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.phone_in_talk_rounded, color: Colors.white, size: 26),
+                    ),
+                    const SizedBox(width: 14),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Telemarketing & Dialer',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          SizedBox(height: 2),
+                          Text(
+                            'Call leads & donors • Logs sync to Admin Panel',
+                            style: TextStyle(color: Colors.white70, fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white70, size: 16),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
 
             // Quick Actions Title
             const Text(

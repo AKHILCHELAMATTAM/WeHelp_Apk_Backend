@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     "donations",
     "attendance",
     "leaves",
+    "calls",
 ]
 
 MIDDLEWARE = [

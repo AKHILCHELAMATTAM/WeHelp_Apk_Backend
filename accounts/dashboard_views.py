@@ -10,6 +10,7 @@ from rest_framework.views import APIView
 
 from attendance.models import Attendance, DailyTarget
 from attendance.serializers import AgentDailyTargetProgressSerializer
+from calls.models import CallLog
 from donations.models import Donation
 from donations.serializers import DonationDetailSerializer
 from leaves.models import LeaveRequest
@@ -81,6 +82,18 @@ class AdminDashboardView(APIView):
 
         all_time_donations_count = Donation.objects.count()
 
+        # Telemarketing call metrics
+        today_calls_count = CallLog.objects.filter(created_at__date=today).count()
+        today_calls_connected = CallLog.objects.filter(
+            created_at__date=today,
+            status__in=["CONNECTED", "INTERESTED", "DONATION_PLEDGED"],
+        ).count()
+        today_calls_pledged = (
+            CallLog.objects.filter(created_at__date=today).aggregate(total=Sum("pledged_amount"))["total"]
+            or Decimal("0.00")
+        )
+        all_time_calls_count = CallLog.objects.count()
+
         # Leave & Week-off management
         pending_leaves_count = LeaveRequest.objects.filter(status="PENDING").count()
 
@@ -107,6 +120,12 @@ class AdminDashboardView(APIView):
                     },
                     "leaves": {
                         "pending_requests_count": pending_leaves_count,
+                    },
+                    "telemarketing": {
+                        "today_calls_count": today_calls_count,
+                        "today_calls_connected": today_calls_connected,
+                        "today_calls_pledged": float(today_calls_pledged),
+                        "all_time_calls_count": all_time_calls_count,
                     },
                 },
                 "recent_donations": DonationDetailSerializer(recent_donations, many=True).data,
@@ -181,6 +200,13 @@ class AgentDashboardView(APIView):
             LeaveRequestDetailSerializer(latest_leave).data if latest_leave else None
         )
 
+        # 6. Today's telemarketing summary
+        agent_today_calls = CallLog.objects.filter(agent=agent, created_at__date=today).count()
+        agent_today_pledged = (
+            CallLog.objects.filter(agent=agent, created_at__date=today).aggregate(total=Sum("pledged_amount"))["total"]
+            or Decimal("0.00")
+        )
+
         return Response(
             {
                 "agent_profile": {
@@ -198,6 +224,10 @@ class AgentDashboardView(APIView):
                     "cash_entries_count": today_cash_count,
                     "product_entries_count": today_product_count,
                     "total_entries": today_cash_count + today_product_count,
+                },
+                "telemarketing": {
+                    "today_calls_count": agent_today_calls,
+                    "today_pledged_amount": float(agent_today_pledged),
                 },
                 "recent_donations": DonationDetailSerializer(recent_donations, many=True).data,
                 "latest_leave_request": latest_leave_data,

@@ -48,4 +48,11 @@ class ApiConstants {
 
   // Agent Leaves & Requests
   static const String leaveRequests = "/api/agent/leaves/";
+
+  // Telemarketing Dialer & Call Logs
+  static const String callLogs = "/api/agent/calls/";
+  static const String callSummary = "/api/agent/calls/summary/";
+  static const String telemarketingLeads = "/api/agent/telemarketing/leads/";
+  static const String adminCallLogs = "/api/admin/calls/";
+  static const String adminCallSummary = "/api/admin/calls/summary/";
 }

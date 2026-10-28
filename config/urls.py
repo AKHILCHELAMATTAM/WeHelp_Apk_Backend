@@ -45,6 +45,9 @@ def api_root_index(request):
                 "attendance_records": request.build_absolute_uri("/api/admin/attendance/"),
                 "targets_management": request.build_absolute_uri("/api/admin/targets/"),
                 "leaves_management": request.build_absolute_uri("/api/admin/leaves/"),
+                "call_logs": request.build_absolute_uri("/api/admin/calls/"),
+                "call_summary": request.build_absolute_uri("/api/admin/calls/summary/"),
+                "telemarketing_leads": request.build_absolute_uri("/api/admin/telemarketing/leads/"),
             },
             "agent_endpoints": {
                 "dashboard": request.build_absolute_uri("/api/agent/dashboard/"),
@@ -56,6 +59,10 @@ def api_root_index(request):
                 "attendance_check_out": request.build_absolute_uri("/api/agent/attendance/check-out/"),
                 "today_target": request.build_absolute_uri("/api/agent/target/today/"),
                 "leave_request_submit": request.build_absolute_uri("/api/agent/leaves/"),
+                "log_call": request.build_absolute_uri("/api/agent/calls/"),
+                "call_logs": request.build_absolute_uri("/api/agent/calls/"),
+                "call_summary": request.build_absolute_uri("/api/agent/calls/summary/"),
+                "telemarketing_leads": request.build_absolute_uri("/api/agent/telemarketing/leads/"),
             },
         }
     )
@@ -80,4 +87,5 @@ urlpatterns = [
     path("api/", include("donations.urls")),
     path("api/", include("attendance.urls")),
     path("api/", include("leaves.urls")),
+    path("api/", include("calls.urls")),
 ]

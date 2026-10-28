@@ -2125,7 +2125,284 @@
       ]
     },
     {
-      "name": "10. System & API Documentation",
+      "name": "10. Telemarketing & Call Logs",
+      "description": "Telemarketing dialer endpoints, agent call outcome logs, lead directory, and admin monitoring of all staff call activities.",
+      "item": [
+        {
+          "name": "Agent Log Call Outcome",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{agent_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/agent/calls/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "agent",
+                "calls"
+              ]
+            },
+            "description": "Telemarketing staff records a call outcome with duration, disposition, notes, and pledge.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contact_name\": \"Dr. Sunita Sharma\",\n  \"phone_number\": \"+919446054321\",\n  \"call_type\": \"OUTGOING\",\n  \"status\": \"DONATION_PLEDGED\",\n  \"call_duration_seconds\": 180,\n  \"pledged_amount\": \"5000.00\",\n  \"notes\": \"Doctor pledged 5000 for student education kits.\",\n  \"lead_category\": \"SPONSOR\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Agent Get Own Call Logs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{agent_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/agent/calls/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "agent",
+                "calls"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "CONNECTED",
+                  "description": "Filter by disposition"
+                },
+                {
+                  "key": "search",
+                  "value": "Sunita",
+                  "description": "Search contact name or phone"
+                }
+              ]
+            },
+            "description": "Retrieves the authenticated agent's recent telemarketing call history."
+          },
+          "response": []
+        },
+        {
+          "name": "Agent Get Telemarketing Call Summary",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{agent_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/agent/calls/summary/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "agent",
+                "calls",
+                "summary"
+              ]
+            },
+            "description": "Today's call counts, connected calls count, and total donation pledges by the agent."
+          },
+          "response": []
+        },
+        {
+          "name": "Agent List Telemarketing Leads",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{agent_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/agent/telemarketing/leads/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "agent",
+                "telemarketing",
+                "leads"
+              ],
+              "query": [
+                {
+                  "key": "category",
+                  "value": "DONOR",
+                  "description": "DONOR, SPONSOR, CORPORATE, VOLUNTEER"
+                },
+                {
+                  "key": "search",
+                  "value": "Kochi",
+                  "description": "Search name, phone, or city"
+                }
+              ]
+            },
+            "description": "Directory of leads and donor contacts available for the agent to call."
+          },
+          "response": []
+        },
+        {
+          "name": "Admin List All Call Logs Across All Staff",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/calls/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "calls"
+              ],
+              "query": [
+                {
+                  "key": "agent_id",
+                  "value": "{{agent_id}}",
+                  "description": "Filter by specific agent"
+                },
+                {
+                  "key": "status",
+                  "value": "DONATION_PLEDGED",
+                  "description": "Filter by disposition"
+                },
+                {
+                  "key": "search",
+                  "value": "Sharma",
+                  "description": "Search contact, phone, notes, or agent name"
+                }
+              ]
+            },
+            "description": "Admin view of all call logs recorded across all telemarketing agents."
+          },
+          "response": []
+        },
+        {
+          "name": "Admin Get Telemarketing Summary & Agent Breakdown",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/calls/summary/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "calls",
+                "summary"
+              ]
+            },
+            "description": "Admin analytics on telemarketing performance, disposition breakdown, and agent rankings."
+          },
+          "response": []
+        },
+        {
+          "name": "Admin Manage Telemarketing Leads",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/telemarketing/leads/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "telemarketing",
+                "leads"
+              ]
+            },
+            "description": "Admin list of all telemarketing leads."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "11. System & API Documentation",
       "description": "Root endpoint and interactive Swagger/OpenAPI documentation endpoints.",
       "item": [
         {
