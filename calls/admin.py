@@ -73,7 +73,7 @@ class CallLogAdmin(admin.ModelAdmin):
 
     def phone_number_display(self, obj):
         return format_html(
-            '<a href="tel:{}" style="font-family: monospace; font-weight: bold; color: #0284C7; text-decoration: none;">📞 {}</a>',
+            '<a href="tel:{}" style="font-family: monospace; font-weight: bold; color: #0284C7; text-decoration: none; white-space: nowrap;">📞 {}</a>',
             obj.phone_number,
             obj.phone_number,
         )
@@ -83,7 +83,7 @@ class CallLogAdmin(admin.ModelAdmin):
 
     def agent_id_badge(self, obj):
         return format_html(
-            '<span style="background: #E0E7FF; color: #3730A3; font-weight: 700; padding: 3px 8px; border-radius: 6px; font-size: 11px;">Agent ID: #{}</span>',
+            '<span style="background: #E0E7FF; color: #3730A3; font-weight: 700; padding: 3px 8px; border-radius: 6px; font-size: 11px; white-space: nowrap; display: inline-block;">Agent ID: #{}</span>',
             obj.agent_id,
         )
 
@@ -93,7 +93,7 @@ class CallLogAdmin(admin.ModelAdmin):
     def agent_display(self, obj):
         full = obj.agent.get_full_name()
         display = full if full else obj.agent.username
-        return format_html("<strong>{}</strong> ({})", display, obj.agent.username)
+        return format_html('<span style="white-space: nowrap;"><strong>{}</strong> <span style="color: #64748B; font-size: 11px;">({})</span></span>', display, obj.agent.username)
 
     agent_display.short_description = "Staff Name"
     agent_display.admin_order_field = "agent__username"
@@ -110,25 +110,26 @@ class CallLogAdmin(admin.ModelAdmin):
             "INCOMING": "↙ Incoming",
             "FOLLOW_UP": "↻ Follow-up",
         }
-        return type_icons.get(obj.call_type, obj.call_type)
+        return format_html('<span style="white-space: nowrap;">{}</span>', type_icons.get(obj.call_type, obj.call_type))
 
     call_type_display.short_description = "Type"
 
     def duration_display(self, obj):
         if obj.call_duration_seconds >= 30:
             return format_html(
-                '<span style="background: #DEF7EC; color: #03543F; font-weight: 700; padding: 3px 8px; border-radius: 6px; font-size: 11px;">⏱ {}</span>',
+                '<span style="background: #DEF7EC; color: #03543F; font-weight: 700; padding: 3px 8px; border-radius: 6px; font-size: 11px; white-space: nowrap; display: inline-block;">⏱ {}</span>',
                 obj.formatted_duration,
             )
-        return format_html('<span style="color: #64748B;">⏱ {}</span>', obj.formatted_duration)
+        return format_html('<span style="color: #64748B; white-space: nowrap; display: inline-block;">⏱ {}</span>', obj.formatted_duration)
 
     duration_display.short_description = "Duration"
     duration_display.admin_order_field = "call_duration_seconds"
 
     def pledged_amount_display(self, obj):
         if obj.pledged_amount and obj.pledged_amount > 0:
+            formatted_amount = f"{float(obj.pledged_amount):,.2f}"
             return format_html(
-                '<strong style="color: #059669;">₹{:,.2f}</strong>', obj.pledged_amount
+                '<strong style="color: #059669; white-space: nowrap;">₹{}</strong>', formatted_amount
             )
         return "-"
 
@@ -137,13 +138,13 @@ class CallLogAdmin(admin.ModelAdmin):
 
     def follow_up_display(self, obj):
         if obj.follow_up_date:
-            return obj.follow_up_date.strftime("%d %b %Y %H:%M")
+            return format_html('<span style="white-space: nowrap;">{}</span>', obj.follow_up_date.strftime("%d %b %Y %H:%M"))
         return "-"
 
     follow_up_display.short_description = "Follow-up"
 
     def created_at_display(self, obj):
-        return obj.created_at.strftime("%d %b %Y, %I:%M %p")
+        return format_html('<span style="white-space: nowrap; color: #64748B; font-size: 12px;">{}</span>', obj.created_at.strftime("%d %b %Y, %I:%M %p"))
 
     created_at_display.short_description = "Logged At"
     created_at_display.admin_order_field = "created_at"

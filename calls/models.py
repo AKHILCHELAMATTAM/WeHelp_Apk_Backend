@@ -136,7 +136,7 @@ class CallLog(models.Model):
         }
         bg, fg = colors.get(self.status, ("#F3F4F6", "#374151"))
         return format_html(
-            '<span style="background-color: {}; color: {}; padding: 3px 8px; border-radius: 9999px; font-weight: 600; font-size: 11px; display: inline-block;">{}</span>',
+            '<span style="background-color: {}; color: {}; padding: 4px 10px; border-radius: 9999px; font-weight: 600; font-size: 11px; display: inline-block; white-space: nowrap;">{}</span>',
             bg,
             fg,
             self.get_status_display(),
