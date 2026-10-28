@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/api/api_client.dart';
@@ -51,6 +52,11 @@ class _TelemarketingDialerScreenState extends State<TelemarketingDialerScreen>
   String _logFilterStatus = 'ALL';
 
   // Active call lifecycle tracking for 30s auto-completion
+  static const String _prefPendingCallIdKey = 'pending_call_log_id';
+  static const String _prefPendingCallTimeKey = 'pending_call_start_time';
+  static const String _prefPendingCallPhoneKey = 'pending_call_phone';
+  static const String _prefPendingCallNameKey = 'pending_call_name';
+
   DateTime? _callStartTime;
   String? _activeDialedPhone;
   String? _activeDialedName;
@@ -69,6 +75,7 @@ class _TelemarketingDialerScreenState extends State<TelemarketingDialerScreen>
     }
     _loadCurrentAgent();
     _loadAllData();
+    _checkAndHandlePendingCall();
   }
 
   @override
@@ -84,8 +91,8 @@ class _TelemarketingDialerScreenState extends State<TelemarketingDialerScreen>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
     // When the agent returns to the app from the phone dialer, auto-complete call details
-    if (state == AppLifecycleState.resumed && _isAwaitingCallReturn) {
-      _handleReturnedFromCall();
+    if (state == AppLifecycleState.resumed) {
+      _checkAndHandlePendingCall();
     }
   }
 
@@ -196,7 +203,7 @@ class _TelemarketingDialerScreenState extends State<TelemarketingDialerScreen>
   // ----------------------------------------------------
   // CALL INITIATION & AUTO-COMPLETION ENGINE
   // ----------------------------------------------------
-  Future<void> _initiateCall(String phone, String name) async {
+  Future<void> _initiateCall(String phone, String name, [String? category]) async {
     final cleanPhone = phone.replaceAll(RegExp(r'[^0-9+]'), '');
     if (cleanPhone.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -218,14 +225,29 @@ class _TelemarketingDialerScreenState extends State<TelemarketingDialerScreen>
       resolvedName = matchedLead != null ? matchedLead.name : 'Contact ($cleanPhone)';
     }
 
-    // Set call tracking state before opening phone app
+    final now = DateTime.now();
     setState(() {
       _activeDialedPhone = cleanPhone;
       _activeDialedName = resolvedName;
-      _callStartTime = DateTime.now();
+      _callStartTime = now;
       _isAwaitingCallReturn = true;
     });
 
+    // 1. Immediately persist tracking state in SharedPreferences
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_prefPendingCallPhoneKey, cleanPhone);
+    await prefs.setString(_prefPendingCallNameKey, resolvedName);
+    await prefs.setInt(_prefPendingCallTimeKey, now.millisecondsSinceEpoch);
+
+    // 2. Immediately register call to backend with default 30s duration so it appears on Admin Dashboard right away!
+    _preLogCallToBackend(
+      cleanPhone: cleanPhone,
+      resolvedName: resolvedName,
+      category: category,
+      callStartTime: now,
+    );
+
+    // 3. Launch phone dialer
     final uri = Uri.parse('tel:$cleanPhone');
     try {
       final launched = await launchUrl(uri);
@@ -242,25 +264,137 @@ class _TelemarketingDialerScreenState extends State<TelemarketingDialerScreen>
     }
   }
 
-  // Triggered when agent resumes back into the app after phone conversation
-  void _handleReturnedFromCall() async {
-    if (!_isAwaitingCallReturn || _activeDialedPhone == null || _callStartTime == null) return;
+  // Pre-logs call with 30s duration to backend immediately upon clicking Call
+  Future<void> _preLogCallToBackend({
+    required String cleanPhone,
+    required String resolvedName,
+    String? category,
+    required DateTime callStartTime,
+  }) async {
+    final agentId = _currentAgent?.id;
+    final agentName = _currentAgent?.fullName ?? 'Agent';
+
+    final payload = {
+      'contact_name': resolvedName.isNotEmpty ? resolvedName : 'Contact ($cleanPhone)',
+      'phone_number': cleanPhone,
+      'call_type': 'OUTGOING',
+      'status': 'CONNECTED',
+      'call_duration_seconds': 30, // Default 30s auto-completion as requested
+      'pledged_amount': '0.00',
+      'notes': 'Auto-completed call (Duration: 30s | Agent ID: #${agentId ?? ""} $agentName)',
+      'lead_category': category ?? 'DONOR',
+    };
+
+    try {
+      final res = await ApiClient.post(ApiConstants.callLogs, body: payload);
+      if (res.isSuccess && res.data != null) {
+        final savedLogJson = res.data is Map ? (res.data['call_log'] ?? res.data) : null;
+        if (savedLogJson != null && savedLogJson is Map) {
+          final logId = savedLogJson['id'] as int?;
+          if (logId != null) {
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setInt(_prefPendingCallIdKey, logId);
+          }
+        }
+        if (mounted) {
+          _fetchSummary();
+          _fetchCallLogs();
+        }
+      }
+    } catch (e) {
+      debugPrint('Error pre-logging call: $e');
+    }
+  }
+
+  // Checks and processes returned call from phone app (handles both short calls, >= 30s calls, and process restarts)
+  Future<void> _checkAndHandlePendingCall() async {
+    final prefs = await SharedPreferences.getInstance();
+    final startTimeMs = prefs.getInt(_prefPendingCallTimeKey);
+    if (!_isAwaitingCallReturn && startTimeMs == null) {
+      return;
+    }
+    final phone = prefs.getString(_prefPendingCallPhoneKey) ?? _activeDialedPhone;
+    final name = prefs.getString(_prefPendingCallNameKey) ?? _activeDialedName;
+    final logId = prefs.getInt(_prefPendingCallIdKey);
+
+    final startTime = startTimeMs != null
+        ? DateTime.fromMillisecondsSinceEpoch(startTimeMs)
+        : _callStartTime;
+
+    if (startTime == null || phone == null) {
+      return;
+    }
+
+    final elapsedSeconds = DateTime.now().difference(startTime).inSeconds;
+
+    // Wait at least 2 seconds to avoid instant transition triggers
+    if (elapsedSeconds < 2) {
+      return;
+    }
+
+    // Clear pending tracking so it doesn't trigger multiple times
     _isAwaitingCallReturn = false;
-
-    final elapsed = DateTime.now().difference(_callStartTime!).inSeconds;
-    // Auto-complete duration: defaults to 30s as requested by user, or exact if longer
-    final int finalDuration = (elapsed >= 5 && elapsed <= 50) ? 30 : (elapsed > 50 ? elapsed : 30);
-
-    final phone = _activeDialedPhone!;
-    final name = _activeDialedName ?? 'Contact ($phone)';
     _callStartTime = null;
+    _activeDialedPhone = null;
+    _activeDialedName = null;
+    await prefs.remove(_prefPendingCallTimeKey);
+    await prefs.remove(_prefPendingCallPhoneKey);
+    await prefs.remove(_prefPendingCallNameKey);
+    await prefs.remove(_prefPendingCallIdKey);
 
-    await _executeAutoLogCall(
-      phoneNumber: phone,
-      contactName: name,
-      durationSeconds: finalDuration,
-      isAutoTriggered: true,
-    );
+    // Call duration: 30s minimum auto-complete, or actual if longer
+    final int finalDuration = elapsedSeconds >= 30 ? elapsedSeconds : 30;
+
+    final agentId = _currentAgent?.id;
+    final agentName = _currentAgent?.fullName ?? 'Agent';
+
+    CallLogModel? callLog;
+    if (logId != null) {
+      // If elapsed was longer than 30s, update backend record with exact duration
+      if (finalDuration > 30) {
+        await ApiClient.patch(
+          '${ApiConstants.callLogs}$logId/',
+          body: {
+            'call_duration_seconds': finalDuration,
+            'notes': 'Call completed via WeHelp Dialer (Duration: ${finalDuration}s | Agent ID: #${agentId ?? ""} $agentName)',
+          },
+        );
+      }
+      final detailRes = await ApiClient.get('${ApiConstants.callLogs}$logId/');
+      if (detailRes.isSuccess && detailRes.data != null && detailRes.data is Map<String, dynamic>) {
+        callLog = CallLogModel.fromJson(detailRes.data);
+      }
+    } else {
+      // If pre-log didn't finish before app pause, create now
+      final payload = {
+        'contact_name': name ?? 'Contact ($phone)',
+        'phone_number': phone,
+        'call_type': 'OUTGOING',
+        'status': 'CONNECTED',
+        'call_duration_seconds': finalDuration,
+        'pledged_amount': '0.00',
+        'notes': 'Auto-completed call log (Duration: ${finalDuration}s | Agent ID: #${agentId ?? ""} $agentName)',
+        'lead_category': 'DONOR',
+      };
+      final res = await ApiClient.post(ApiConstants.callLogs, body: payload);
+      if (res.isSuccess && res.data != null) {
+        final savedLogJson = res.data is Map ? (res.data['call_log'] ?? res.data) : null;
+        if (savedLogJson != null && savedLogJson is Map<String, dynamic>) {
+          callLog = CallLogModel.fromJson(savedLogJson);
+        }
+      }
+    }
+
+    if (mounted) {
+      _loadAllData();
+      _showAutoCompleteConfirmationSheet(
+        callLog: callLog,
+        phoneNumber: phone,
+        contactName: name ?? 'Contact ($phone)',
+        durationSeconds: finalDuration,
+        isAutoTriggered: true,
+      );
+    }
   }
 
   // Core API call to auto-record call details (duration 30s, contact number, agent ID) to backend
@@ -1168,7 +1302,7 @@ class _TelemarketingDialerScreenState extends State<TelemarketingDialerScreen>
                                   // Call Button with Auto-Complete on return
                                   ElevatedButton(
                                     onPressed: () {
-                                      _initiateCall(lead.phoneNumber, lead.name);
+                                      _initiateCall(lead.phoneNumber, lead.name, lead.category);
                                     },
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: const Color(0xFF0E9F6E),

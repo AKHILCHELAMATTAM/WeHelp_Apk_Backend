@@ -169,7 +169,7 @@ class TelemarketingLeadAdmin(admin.ModelAdmin):
     def assigned_agent_display(self, obj):
         if obj.assigned_agent:
             return obj.assigned_agent.get_full_name() or obj.assigned_agent.username
-        return format_html('<span style="color: #9CA3AF;">All Agents</span>')
+        return format_html('<span style="color: #9CA3AF;">{}</span>', "All Agents")
 
     assigned_agent_display.short_description = "Assigned To"
 

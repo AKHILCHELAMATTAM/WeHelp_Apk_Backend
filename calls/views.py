@@ -5,6 +5,7 @@ from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from accounts.permissions import IsAdminUserRole, IsAgentUserRole
 from .models import CallLog, TelemarketingLead
@@ -22,6 +23,7 @@ class AgentCallLogListCreateView(APIView):
     - GET: Retrieve their personal history of call logs.
     """
 
+    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAgentUserRole]
 
     @extend_schema(
@@ -78,6 +80,7 @@ class AgentCallLogDetailView(generics.RetrieveUpdateAPIView):
     and donation pledges on their recorded call logs.
     """
 
+    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAgentUserRole]
     serializer_class = CallLogSerializer
 
@@ -90,6 +93,7 @@ class AgentCallSummaryView(APIView):
     Summary metrics for the authenticated agent's telemarketing performance.
     """
 
+    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAgentUserRole]
 
     @extend_schema(
@@ -132,6 +136,7 @@ class AgentTelemarketingLeadsView(APIView):
     Also allows agents to add new leads directly from the field.
     """
 
+    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAgentUserRole]
 
     @extend_schema(
@@ -184,6 +189,7 @@ class AdminCallLogListView(APIView):
     Supports filtering by agent, disposition, date range, and search.
     """
 
+    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAdminUserRole]
 
     @extend_schema(
@@ -235,6 +241,7 @@ class AdminCallLogSummaryView(APIView):
     Consolidated analytics for the admin panel on telemarketing performance.
     """
 
+    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAdminUserRole]
 
     @extend_schema(
@@ -292,6 +299,7 @@ class AdminTelemarketingLeadListCreateView(generics.ListCreateAPIView):
     Admin management of telemarketing leads database.
     """
 
+    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAdminUserRole]
     queryset = TelemarketingLead.objects.all()
     serializer_class = TelemarketingLeadSerializer
