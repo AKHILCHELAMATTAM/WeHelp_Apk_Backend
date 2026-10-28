@@ -335,10 +335,12 @@
           Real-time auto-completed call logs from telemarketing staff with contact numbers, Agent IDs, and 30s duration.
         </span>
       </div>
-      <div>
+      <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+        <a href="/static/WeHelp_Agent.apk" download style="background: #2563eb; color: #ffffff; padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 12px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 1px 2px rgba(37, 99, 235, 0.3);">
+          <span>📲 Download Latest APK</span>
+        </a>
         <a href="{% url 'admin:calls_calllog_changelist' %}" style="background: #059669; color: #ffffff; padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 12px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 1px 2px rgba(5, 150, 105, 0.3);">
-          <span>View All Call Logs</span>
-          <span>&rarr;</span>
+          <span>View All Call Logs &rarr;</span>
         </a>
       </div>
     </div>
@@ -565,6 +567,20 @@
         <div class="ops-links">
           <a href="{% url 'admin:tracking_agentlocation_changelist' %}" class="ops-link-primary">View Locations</a>
           <a href="{% url 'admin:tracking_agentlocation_add' %}" class="ops-link-add">+ Add</a>
+        </div>
+      </div>
+
+      <!-- Android Mobile APK Download -->
+      <div class="ops-card" style="border-color: #bfdbfe; background: #eff6ff;">
+        <div class="ops-card-top">
+          <div class="ops-icon" style="background: #dbeafe;">📲</div>
+          <div>
+            <h4 class="ops-name" style="color: #1e40af;">Android App APK</h4>
+            <span style="font-size: 11px; color: #3b82f6;">Latest Telemarketing APK</span>
+          </div>
+        </div>
+        <div class="ops-links">
+          <a href="/static/WeHelp_Agent.apk" download class="ops-link-primary" style="background: #2563eb; color: #ffffff;">Download APK</a>
         </div>
       </div>
     </div>
